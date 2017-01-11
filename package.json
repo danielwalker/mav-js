@@ -14,9 +14,11 @@
     "typescript": "^2.0.10"
   },
   "dependencies": {
+    "@types/moment": "^2.13.0",
     "@types/winston": "^2.2.0",
     "events": "^1.1.1",
     "jspack": "^0.0.4",
+    "moment": "^2.17.1",
     "net": "^1.0.2",
     "underscore": "^1.8.3",
     "util": "^0.10.3",
