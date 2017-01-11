@@ -5,100 +5,77 @@ Generated from: test.xml
 
 Note: this file has been auto-generated. DO NOT EDIT
 */
-
 jspack = require("jspack").jspack,
     _ = require("underscore"),
     events = require("events"),
     util = require("util");
-
 // Add a convenience method to Buffer
 Buffer.prototype.toByteArray = function () {
-  return Array.prototype.slice.call(this, 0)
-}
-
-mavlink = function(){};
-
+    return Array.prototype.slice.call(this, 0);
+};
+mavlink = function () { };
 // Implement the X25CRC function (present in the Python version through the mavutil.py package)
-mavlink.x25Crc = function(buffer, crc) {
-
+mavlink.x25Crc = function (buffer, crc) {
     var bytes = buffer;
     var crc = crc || 0xffff;
-    _.each(bytes, function(e) {
+    _.each(bytes, function (e) {
         var tmp = e ^ (crc & 0xff);
         tmp = (tmp ^ (tmp << 4)) & 0xff;
         crc = (crc >> 8) ^ (tmp << 8) ^ (tmp << 3) ^ (tmp >> 4);
         crc = crc & 0xffff;
     });
     return crc;
-
-}
-
+};
 mavlink.WIRE_PROTOCOL_VERSION = "1.0";
-
-mavlink.MAVLINK_TYPE_CHAR     = 0
-mavlink.MAVLINK_TYPE_UINT8_T  = 1
-mavlink.MAVLINK_TYPE_INT8_T   = 2
-mavlink.MAVLINK_TYPE_UINT16_T = 3
-mavlink.MAVLINK_TYPE_INT16_T  = 4
-mavlink.MAVLINK_TYPE_UINT32_T = 5
-mavlink.MAVLINK_TYPE_INT32_T  = 6
-mavlink.MAVLINK_TYPE_UINT64_T = 7
-mavlink.MAVLINK_TYPE_INT64_T  = 8
-mavlink.MAVLINK_TYPE_FLOAT    = 9
-mavlink.MAVLINK_TYPE_DOUBLE   = 10
-
+mavlink.MAVLINK_TYPE_CHAR = 0;
+mavlink.MAVLINK_TYPE_UINT8_T = 1;
+mavlink.MAVLINK_TYPE_INT8_T = 2;
+mavlink.MAVLINK_TYPE_UINT16_T = 3;
+mavlink.MAVLINK_TYPE_INT16_T = 4;
+mavlink.MAVLINK_TYPE_UINT32_T = 5;
+mavlink.MAVLINK_TYPE_INT32_T = 6;
+mavlink.MAVLINK_TYPE_UINT64_T = 7;
+mavlink.MAVLINK_TYPE_INT64_T = 8;
+mavlink.MAVLINK_TYPE_FLOAT = 9;
+mavlink.MAVLINK_TYPE_DOUBLE = 10;
 // Mavlink headers incorporate sequence, source system (platform) and source component. 
-mavlink.header = function(msgId, mlen, seq, srcSystem, srcComponent) {
-
-    this.mlen = ( typeof mlen === 'undefined' ) ? 0 : mlen;
-    this.seq = ( typeof seq === 'undefined' ) ? 0 : seq;
-    this.srcSystem = ( typeof srcSystem === 'undefined' ) ? 0 : srcSystem;
-    this.srcComponent = ( typeof srcComponent === 'undefined' ) ? 0 : srcComponent;
-    this.msgId = msgId
-
-}
-
-mavlink.header.prototype.pack = function() {
+mavlink.header = function (msgId, mlen, seq, srcSystem, srcComponent) {
+    this.mlen = (typeof mlen === 'undefined') ? 0 : mlen;
+    this.seq = (typeof seq === 'undefined') ? 0 : seq;
+    this.srcSystem = (typeof srcSystem === 'undefined') ? 0 : srcSystem;
+    this.srcComponent = (typeof srcComponent === 'undefined') ? 0 : srcComponent;
+    this.msgId = msgId;
+};
+mavlink.header.prototype.pack = function () {
     return jspack.Pack('BBBBBB', [254, this.mlen, this.seq, this.srcSystem, this.srcComponent, this.msgId]);
-}
-
+};
 // Base class declaration: mavlink.message will be the parent class for each
 // concrete implementation in mavlink.messages.
-mavlink.message = function() {};
-
+mavlink.message = function () { };
 // Convenience setter to facilitate turning the unpacked array of data into member properties
-mavlink.message.prototype.set = function(args) {
-    _.each(this.fieldnames, function(e, i) {
+mavlink.message.prototype.set = function (args) {
+    _.each(this.fieldnames, function (e, i) {
         this[e] = args[i];
     }, this);
 };
-
 // This pack function builds the header and produces a complete MAVLink message,
 // including header and message CRC.
-mavlink.message.prototype.pack = function(mav, crc_extra, payload) {
-
+mavlink.message.prototype.pack = function (mav, crc_extra, payload) {
     this.payload = payload;
-    this.header = new mavlink.header(this.id, payload.length, mav.seq, mav.srcSystem, mav.srcComponent);    
+    this.header = new mavlink.header(this.id, payload.length, mav.seq, mav.srcSystem, mav.srcComponent);
     this.msgbuf = this.header.pack().concat(payload);
     var crc = mavlink.x25Crc(this.msgbuf.slice(1));
-
     // For now, assume always using crc_extra = True.  TODO: check/fix this.
     crc = mavlink.x25Crc([crc_extra], crc);
-    this.msgbuf = this.msgbuf.concat(jspack.Pack('<H', [crc] ) );
+    this.msgbuf = this.msgbuf.concat(jspack.Pack('<H', [crc]));
     return this.msgbuf;
-
-}
-
-
+};
 // enums
-
 // message IDs
-mavlink.MAVLINK_MSG_ID_BAD_DATA = -1
-mavlink.MAVLINK_MSG_ID_TEST_TYPES = 0
-
+mavlink.MAVLINK_MSG_ID_BAD_DATA = -1;
+mavlink.MAVLINK_MSG_ID_TEST_TYPES = 0;
 mavlink.messages = {};
-
-/* 
+/*
 Test all field types
 
                 c                         : char (char)
@@ -125,62 +102,42 @@ Test all field types
                 d_array                   : double_array (double)
 
 */
-mavlink.messages.test_types = function(c, s, u8, u16, u32, u64, s8, s16, s32, s64, f, d, u8_array, u16_array, u32_array, u64_array, s8_array, s16_array, s32_array, s64_array, f_array, d_array) {
-
+mavlink.messages.test_types = function (c, s, u8, u16, u32, u64, s8, s16, s32, s64, f, d, u8_array, u16_array, u32_array, u64_array, s8_array, s16_array, s32_array, s64_array, f_array, d_array) {
     this.format = '<Qqd3Q3q3dIif3I3i3fHh3H3hc10sBb3s3s';
     this.id = mavlink.MAVLINK_MSG_ID_TEST_TYPES;
     this.order_map = [16, 17, 18, 12, 6, 0, 19, 13, 7, 1, 8, 2, 20, 14, 9, 3, 21, 15, 10, 4, 11, 5];
     this.crc_extra = 103;
     this.name = 'TEST_TYPES';
-
     this.fieldnames = ['c', 's', 'u8', 'u16', 'u32', 'u64', 's8', 's16', 's32', 's64', 'f', 'd', 'u8_array', 'u16_array', 'u32_array', 'u64_array', 's8_array', 's16_array', 's32_array', 's64_array', 'f_array', 'd_array'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.test_types.prototype = new mavlink.message;
-
-mavlink.messages.test_types.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.u64, this.s64, this.d, this.u64_array, this.s64_array, this.d_array, this.u32, this.s32, this.f, this.u32_array, this.s32_array, this.f_array, this.u16, this.s16, this.u16_array, this.s16_array, this.c, this.s, this.u8, this.s8, this.u8_array, this.s8_array]));
-}
-
-
-
+mavlink.messages.test_types.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.u64, this.s64, this.d, this.u64_array, this.s64_array, this.d_array, this.u32, this.s32, this.f, this.u32_array, this.s32_array, this.f_array, this.u16, this.s16, this.u16_array, this.s16_array, this.c, this.s, this.u8, this.s8, this.u8_array, this.s8_array]));
+};
 mavlink.map = {
-        0: { format: '<Qqd3Q3q3dIif3I3i3fHh3H3hc10sBb3s3s', type: mavlink.messages.test_types, order_map: [16, 17, 18, 12, 6, 0, 19, 13, 7, 1, 8, 2, 20, 14, 9, 3, 21, 15, 10, 4, 11, 5], crc_extra: 103 },
-}
-
-
+    0: { format: '<Qqd3Q3q3dIif3I3i3fHh3H3hc10sBb3s3s', type: mavlink.messages.test_types, order_map: [16, 17, 18, 12, 6, 0, 19, 13, 7, 1, 8, 2, 20, 14, 9, 3, 21, 15, 10, 4, 11, 5], crc_extra: 103 },
+};
 // Special mavlink message to capture malformed data packets for debugging
-mavlink.messages.bad_data = function(data, reason) {
+mavlink.messages.bad_data = function (data, reason) {
     this.id = mavlink.MAVLINK_MSG_ID_BAD_DATA;
     this.data = data;
     this.reason = reason;
     this.msgbuf = data;
-}
-
+};
 /* MAVLink protocol handling class */
-MAVLink = function(logger, srcSystem, srcComponent) {
-
+MAVLink = function (logger, srcSystem, srcComponent) {
     this.logger = logger;
-
     this.seq = 0;
     this.buf = new Buffer(0);
     this.bufInError = new Buffer(0);
-   
     this.srcSystem = (typeof srcSystem === 'undefined') ? 0 : srcSystem;
-    this.srcComponent =  (typeof srcComponent === 'undefined') ? 0 : srcComponent;
-
+    this.srcComponent = (typeof srcComponent === 'undefined') ? 0 : srcComponent;
     // The first packet we expect is a valid header, 6 bytes.
     this.expected_length = 6;
-
     this.have_prefix_error = false;
-
     this.protocol_marker = 254;
     this.little_endian = true;
-
     this.crc_extra = true;
     this.sort_fields = true;
     this.total_packets_sent = 0;
@@ -189,120 +146,90 @@ MAVLink = function(logger, srcSystem, srcComponent) {
     this.total_bytes_received = 0;
     this.total_receive_errors = 0;
     this.startup_time = Date.now();
-    
-}
-
+};
 // Implements EventEmitter
 util.inherits(MAVLink, events.EventEmitter);
-
 // If the logger exists, this function will add a message to it.
 // Assumes the logger is a winston object.
-MAVLink.prototype.log = function(message) {
-    if(this.logger) {
+MAVLink.prototype.log = function (message) {
+    if (this.logger) {
         this.logger.info(message);
     }
-}
-
-MAVLink.prototype.log = function(level, message) {
-    if(this.logger) {
+};
+MAVLink.prototype.log = function (level, message) {
+    if (this.logger) {
         this.logger.log(level, message);
     }
-}
-
-MAVLink.prototype.send = function(mavmsg) {
+};
+MAVLink.prototype.send = function (mavmsg) {
     buf = mavmsg.pack(this);
     this.file.write(buf);
     this.seq = (this.seq + 1) % 256;
-    this.total_packets_sent +=1;
+    this.total_packets_sent += 1;
     this.total_bytes_sent += buf.length;
-}
-
+};
 // return number of bytes needed for next parsing stage
-MAVLink.prototype.bytes_needed = function() {
+MAVLink.prototype.bytes_needed = function () {
     ret = this.expected_length - this.buf.length;
-    return ( ret <= 0 ) ? 1 : ret;
-}
-
+    return (ret <= 0) ? 1 : ret;
+};
 // add data to the local buffer
-MAVLink.prototype.pushBuffer = function(data) {
-    if(data) {
+MAVLink.prototype.pushBuffer = function (data) {
+    if (data) {
         this.buf = Buffer.concat([this.buf, data]);
         this.total_bytes_received += data.length;
     }
-}
-
+};
 // Decode prefix.  Elides the prefix.
-MAVLink.prototype.parsePrefix = function() {
-
+MAVLink.prototype.parsePrefix = function () {
     // Test for a message prefix.
-    if( this.buf.length >= 1 && this.buf[0] != 254 ) {
-
+    if (this.buf.length >= 1 && this.buf[0] != 254) {
         // Strip the offending initial byte and throw an error.
         var badPrefix = this.buf[0];
-        this.bufInError = this.buf.slice(0,1);
+        this.bufInError = this.buf.slice(0, 1);
         this.buf = this.buf.slice(1);
         this.expected_length = 6;
-
         // TODO: enable subsequent prefix error suppression if robust_parsing is implemented
         //if(!this.have_prefix_error) {
         //    this.have_prefix_error = true;
-            throw new Error("Bad prefix ("+badPrefix+")");
-        //}
-
+        throw new Error("Bad prefix (" + badPrefix + ")");
     }
     //else if( this.buf.length >= 1 && this.buf[0] == 254 ) {
     //    this.have_prefix_error = false;
     //}
-
-}
-
+};
 // Determine the length.  Leaves buffer untouched.
-MAVLink.prototype.parseLength = function() {
-    
-    if( this.buf.length >= 2 ) {
+MAVLink.prototype.parseLength = function () {
+    if (this.buf.length >= 2) {
         var unpacked = jspack.Unpack('BB', this.buf.slice(0, 2));
         this.expected_length = unpacked[1] + 8; // length of message + header + CRC
     }
-
-}
-
+};
 // input some data bytes, possibly returning a new message
-MAVLink.prototype.parseChar = function(c) {
-
+MAVLink.prototype.parseChar = function (c) {
     var m = null;
-
     try {
-
         this.pushBuffer(c);
         this.parsePrefix();
         this.parseLength();
         m = this.parsePayload();
-
-    } catch(e) {
-
+    }
+    catch (e) {
         this.log('error', e.message);
         this.total_receive_errors += 1;
         m = new mavlink.messages.bad_data(this.bufInError, e.message);
         this.bufInError = new Buffer(0);
-        
     }
-
-    if(null != m) {
+    if (null != m) {
         this.emit(m.name, m);
         this.emit('message', m);
     }
-
     return m;
-
-}
-
-MAVLink.prototype.parsePayload = function() {
-
+};
+MAVLink.prototype.parsePayload = function () {
     var m = null;
-
     // If we have enough bytes to try and read it, read it.
-    if( this.expected_length >= 8 && this.buf.length >= this.expected_length ) {
-
+    if (this.expected_length >= 8 && this.buf.length >= this.expected_length) {
         // Slice off the expected packet length, reset expectation to be to find a header.
         var mbuf = this.buf.slice(0, this.expected_length);
         // TODO: slicing off the buffer should depend on the error produced by the decode() function
@@ -310,55 +237,43 @@ MAVLink.prototype.parsePayload = function() {
         // - if the message is not well formed (correct prefix by accident), cut-off 1 char only
         this.buf = this.buf.slice(this.expected_length);
         this.expected_length = 6;
-
         // w.info("Attempting to parse packet, message candidate buffer is ["+mbuf.toByteArray()+"]");
-
         try {
             m = this.decode(mbuf);
             this.total_packets_received += 1;
         }
-        catch(e) {
+        catch (e) {
             // Set buffer in question and re-throw to generic error handling
             this.bufInError = mbuf;
             throw e;
         }
     }
-
     return m;
-
-}
-
+};
 // input some data bytes, possibly returning an array of new messages
-MAVLink.prototype.parseBuffer = function(s) {
-    
+MAVLink.prototype.parseBuffer = function (s) {
     // Get a message, if one is available in the stream.
     var m = this.parseChar(s);
-
     // No messages available, bail.
-    if ( null === m ) {
+    if (null === m) {
         return null;
     }
-    
     // While more valid messages can be read from the existing buffer, add
     // them to the array of new messages and return them.
     var ret = [m];
-    while(true) {
+    while (true) {
         m = this.parseChar();
-        if ( null === m ) {
+        if (null === m) {
             // No more messages left.
             return ret;
         }
         ret.push(m);
     }
     return ret;
-
-}
-
+};
 /* decode a buffer as a MAVLink message */
-MAVLink.prototype.decode = function(msgbuf) {
-
+MAVLink.prototype.decode = function (msgbuf) {
     var magic, mlen, seq, srcSystem, srcComponent, unpacked, msgId;
-
     // decode the header
     try {
         unpacked = jspack.Unpack('cBBBBB', msgbuf.slice(0, 6));
@@ -369,63 +284,53 @@ MAVLink.prototype.decode = function(msgbuf) {
         srcComponent = unpacked[4];
         msgId = unpacked[5];
     }
-    catch(e) {
+    catch (e) {
         throw new Error('Unable to unpack MAVLink header: ' + e.message);
     }
-
     if (magic.charCodeAt(0) != 254) {
-        throw new Error("Invalid MAVLink prefix ("+magic.charCodeAt(0)+")");
+        throw new Error("Invalid MAVLink prefix (" + magic.charCodeAt(0) + ")");
     }
-
-    if( mlen != msgbuf.length - 8 ) {
+    if (mlen != msgbuf.length - 8) {
         throw new Error("Invalid MAVLink message length.  Got " + (msgbuf.length - 8) + " expected " + mlen + ", msgId=" + msgId);
     }
-
-    if( false === _.has(mavlink.map, msgId) ) {
+    if (false === _.has(mavlink.map, msgId)) {
         throw new Error("Unknown MAVLink message ID (" + msgId + ")");
     }
-
     // decode the payload
     // refs: (fmt, type, order_map, crc_extra) = mavlink.map[msgId]
     var decoder = mavlink.map[msgId];
-
     // decode the checksum
     try {
         var receivedChecksum = jspack.Unpack('<H', msgbuf.slice(msgbuf.length - 2));
-    } catch (e) {
+    }
+    catch (e) {
         throw new Error("Unable to unpack MAVLink CRC: " + e.message);
     }
-
     var messageChecksum = mavlink.x25Crc(msgbuf.slice(1, msgbuf.length - 2));
-
     // Assuming using crc_extra = True.  See the message.prototype.pack() function.
     messageChecksum = mavlink.x25Crc([decoder.crc_extra], messageChecksum);
-    
-    if ( receivedChecksum != messageChecksum ) {
-        throw new Error('invalid MAVLink CRC in msgID ' +msgId+ ', got 0x' + receivedChecksum + ' checksum, calculated payload checkum as 0x'+messageChecksum );
+    if (receivedChecksum != messageChecksum) {
+        throw new Error('invalid MAVLink CRC in msgID ' + msgId + ', got 0x' + receivedChecksum + ' checksum, calculated payload checkum as 0x' + messageChecksum);
     }
-
     // Decode the payload and reorder the fields to match the order map.
     try {
         var t = jspack.Unpack(decoder.format, msgbuf.slice(6, msgbuf.length));
     }
     catch (e) {
-        throw new Error('Unable to unpack MAVLink payload type='+decoder.type+' format='+decoder.format+' payloadLength='+ msgbuf.slice(6, -2).length +': '+ e.message);
+        throw new Error('Unable to unpack MAVLink payload type=' + decoder.type + ' format=' + decoder.format + ' payloadLength=' + msgbuf.slice(6, -2).length + ': ' + e.message);
     }
-
     // Reorder the fields to match the order map
     var args = [];
-    _.each(t, function(e, i, l) {
-        args[i] = t[decoder.order_map[i]]
+    _.each(t, function (e, i, l) {
+        args[i] = t[decoder.order_map[i]];
     });
-
     // construct the message object
     try {
         var m = new decoder.type(args);
         m.set.call(m, args);
     }
     catch (e) {
-        throw new Error('Unable to instantiate MAVLink message of type '+decoder.type+' : ' + e.message);
+        throw new Error('Unable to instantiate MAVLink message of type ' + decoder.type + ' : ' + e.message);
     }
     m.msgbuf = msgbuf;
     m.payload = msgbuf.slice(6);
@@ -433,9 +338,7 @@ MAVLink.prototype.decode = function(msgbuf) {
     m.header = new mavlink.header(msgId, mlen, seq, srcSystem, srcComponent);
     this.log(m);
     return m;
-}
-
-
+};
 // Expose this code as a module
 module.exports = mavlink;
-
+//# sourceMappingURL=mavlink.js.map

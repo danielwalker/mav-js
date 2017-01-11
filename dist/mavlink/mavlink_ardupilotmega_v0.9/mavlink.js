@@ -5,289 +5,260 @@ Generated from: ardupilotmega.xml,common.xml
 
 Note: this file has been auto-generated. DO NOT EDIT
 */
-
 jspack = require("jspack").jspack,
     _ = require("underscore"),
     events = require("events"),
     util = require("util");
-
 // Add a convenience method to Buffer
 Buffer.prototype.toByteArray = function () {
-  return Array.prototype.slice.call(this, 0)
-}
-
-mavlink = function(){};
-
+    return Array.prototype.slice.call(this, 0);
+};
+mavlink = function () { };
 // Implement the X25CRC function (present in the Python version through the mavutil.py package)
-mavlink.x25Crc = function(buffer, crc) {
-
+mavlink.x25Crc = function (buffer, crc) {
     var bytes = buffer;
     var crc = crc || 0xffff;
-    _.each(bytes, function(e) {
+    _.each(bytes, function (e) {
         var tmp = e ^ (crc & 0xff);
         tmp = (tmp ^ (tmp << 4)) & 0xff;
         crc = (crc >> 8) ^ (tmp << 8) ^ (tmp << 3) ^ (tmp >> 4);
         crc = crc & 0xffff;
     });
     return crc;
-
-}
-
+};
 mavlink.WIRE_PROTOCOL_VERSION = "0.9";
-
-mavlink.MAVLINK_TYPE_CHAR     = 0
-mavlink.MAVLINK_TYPE_UINT8_T  = 1
-mavlink.MAVLINK_TYPE_INT8_T   = 2
-mavlink.MAVLINK_TYPE_UINT16_T = 3
-mavlink.MAVLINK_TYPE_INT16_T  = 4
-mavlink.MAVLINK_TYPE_UINT32_T = 5
-mavlink.MAVLINK_TYPE_INT32_T  = 6
-mavlink.MAVLINK_TYPE_UINT64_T = 7
-mavlink.MAVLINK_TYPE_INT64_T  = 8
-mavlink.MAVLINK_TYPE_FLOAT    = 9
-mavlink.MAVLINK_TYPE_DOUBLE   = 10
-
+mavlink.MAVLINK_TYPE_CHAR = 0;
+mavlink.MAVLINK_TYPE_UINT8_T = 1;
+mavlink.MAVLINK_TYPE_INT8_T = 2;
+mavlink.MAVLINK_TYPE_UINT16_T = 3;
+mavlink.MAVLINK_TYPE_INT16_T = 4;
+mavlink.MAVLINK_TYPE_UINT32_T = 5;
+mavlink.MAVLINK_TYPE_INT32_T = 6;
+mavlink.MAVLINK_TYPE_UINT64_T = 7;
+mavlink.MAVLINK_TYPE_INT64_T = 8;
+mavlink.MAVLINK_TYPE_FLOAT = 9;
+mavlink.MAVLINK_TYPE_DOUBLE = 10;
 // Mavlink headers incorporate sequence, source system (platform) and source component. 
-mavlink.header = function(msgId, mlen, seq, srcSystem, srcComponent) {
-
-    this.mlen = ( typeof mlen === 'undefined' ) ? 0 : mlen;
-    this.seq = ( typeof seq === 'undefined' ) ? 0 : seq;
-    this.srcSystem = ( typeof srcSystem === 'undefined' ) ? 0 : srcSystem;
-    this.srcComponent = ( typeof srcComponent === 'undefined' ) ? 0 : srcComponent;
-    this.msgId = msgId
-
-}
-
-mavlink.header.prototype.pack = function() {
+mavlink.header = function (msgId, mlen, seq, srcSystem, srcComponent) {
+    this.mlen = (typeof mlen === 'undefined') ? 0 : mlen;
+    this.seq = (typeof seq === 'undefined') ? 0 : seq;
+    this.srcSystem = (typeof srcSystem === 'undefined') ? 0 : srcSystem;
+    this.srcComponent = (typeof srcComponent === 'undefined') ? 0 : srcComponent;
+    this.msgId = msgId;
+};
+mavlink.header.prototype.pack = function () {
     return jspack.Pack('BBBBBB', [85, this.mlen, this.seq, this.srcSystem, this.srcComponent, this.msgId]);
-}
-
+};
 // Base class declaration: mavlink.message will be the parent class for each
 // concrete implementation in mavlink.messages.
-mavlink.message = function() {};
-
+mavlink.message = function () { };
 // Convenience setter to facilitate turning the unpacked array of data into member properties
-mavlink.message.prototype.set = function(args) {
-    _.each(this.fieldnames, function(e, i) {
+mavlink.message.prototype.set = function (args) {
+    _.each(this.fieldnames, function (e, i) {
         this[e] = args[i];
     }, this);
 };
-
 // This pack function builds the header and produces a complete MAVLink message,
 // including header and message CRC.
-mavlink.message.prototype.pack = function(mav, crc_extra, payload) {
-
+mavlink.message.prototype.pack = function (mav, crc_extra, payload) {
     this.payload = payload;
-    this.header = new mavlink.header(this.id, payload.length, mav.seq, mav.srcSystem, mav.srcComponent);    
+    this.header = new mavlink.header(this.id, payload.length, mav.seq, mav.srcSystem, mav.srcComponent);
     this.msgbuf = this.header.pack().concat(payload);
     var crc = mavlink.x25Crc(this.msgbuf.slice(1));
-
     // For now, assume always using crc_extra = True.  TODO: check/fix this.
     crc = mavlink.x25Crc([crc_extra], crc);
-    this.msgbuf = this.msgbuf.concat(jspack.Pack('<H', [crc] ) );
+    this.msgbuf = this.msgbuf.concat(jspack.Pack('<H', [crc]));
     return this.msgbuf;
-
-}
-
-
+};
 // enums
-
 // MAV_MOUNT_MODE
-mavlink.MAV_MOUNT_MODE_RETRACT = 0 // Load and keep safe position (Roll,Pitch,Yaw) from EEPROM and stop
-                        // stabilization
-mavlink.MAV_MOUNT_MODE_NEUTRAL = 1 // Load and keep neutral position (Roll,Pitch,Yaw) from EEPROM.
-mavlink.MAV_MOUNT_MODE_MAVLINK_TARGETING = 2 // Load neutral position and start MAVLink Roll,Pitch,Yaw control with
-                        // stabilization
-mavlink.MAV_MOUNT_MODE_RC_TARGETING = 3 // Load neutral position and start RC Roll,Pitch,Yaw control with
-                        // stabilization
-mavlink.MAV_MOUNT_MODE_GPS_POINT = 4 // Load neutral position and start to point to Lat,Lon,Alt
-mavlink.MAV_MOUNT_MODE_ENUM_END = 5 // 
-
+mavlink.MAV_MOUNT_MODE_RETRACT = 0; // Load and keep safe position (Roll,Pitch,Yaw) from EEPROM and stop
+// stabilization
+mavlink.MAV_MOUNT_MODE_NEUTRAL = 1; // Load and keep neutral position (Roll,Pitch,Yaw) from EEPROM.
+mavlink.MAV_MOUNT_MODE_MAVLINK_TARGETING = 2; // Load neutral position and start MAVLink Roll,Pitch,Yaw control with
+// stabilization
+mavlink.MAV_MOUNT_MODE_RC_TARGETING = 3; // Load neutral position and start RC Roll,Pitch,Yaw control with
+// stabilization
+mavlink.MAV_MOUNT_MODE_GPS_POINT = 4; // Load neutral position and start to point to Lat,Lon,Alt
+mavlink.MAV_MOUNT_MODE_ENUM_END = 5; // 
 // MAV_CMD
-mavlink.MAV_CMD_NAV_WAYPOINT = 16 // Navigate to waypoint.
-mavlink.MAV_CMD_NAV_LOITER_UNLIM = 17 // Loiter around this waypoint an unlimited amount of time
-mavlink.MAV_CMD_NAV_LOITER_TURNS = 18 // Loiter around this waypoint for X turns
-mavlink.MAV_CMD_NAV_LOITER_TIME = 19 // Loiter around this waypoint for X seconds
-mavlink.MAV_CMD_NAV_RETURN_TO_LAUNCH = 20 // Return to launch location
-mavlink.MAV_CMD_NAV_LAND = 21 // Land at location
-mavlink.MAV_CMD_NAV_TAKEOFF = 22 // Takeoff from ground / hand
-mavlink.MAV_CMD_NAV_ROI = 80 // Sets the region of interest (ROI) for a sensor set or the
-                        // vehicle itself. This can then be used by
-                        // the vehicles control             system to
-                        // control the vehicle attitude and the
-                        // attitude of various             sensors
-                        // such as cameras.
-mavlink.MAV_CMD_NAV_PATHPLANNING = 81 // Control autonomous path planning on the MAV.
-mavlink.MAV_CMD_NAV_LAST = 95 // NOP - This command is only used to mark the upper limit of the
-                        // NAV/ACTION commands in the enumeration
-mavlink.MAV_CMD_CONDITION_DELAY = 112 // Delay mission state machine.
-mavlink.MAV_CMD_CONDITION_CHANGE_ALT = 113 // Ascend/descend at rate.  Delay mission state machine until desired
-                        // altitude reached.
-mavlink.MAV_CMD_CONDITION_DISTANCE = 114 // Delay mission state machine until within desired distance of next NAV
-                        // point.
-mavlink.MAV_CMD_CONDITION_YAW = 115 // Reach a certain target angle.
-mavlink.MAV_CMD_CONDITION_LAST = 159 // NOP - This command is only used to mark the upper limit of the
-                        // CONDITION commands in the enumeration
-mavlink.MAV_CMD_DO_SET_MODE = 176 // Set system mode.
-mavlink.MAV_CMD_DO_JUMP = 177 // Jump to the desired command in the mission list.  Repeat this action
-                        // only the specified number of times
-mavlink.MAV_CMD_DO_CHANGE_SPEED = 178 // Change speed and/or throttle set points.
-mavlink.MAV_CMD_DO_SET_HOME = 179 // Changes the home location either to the current location or a
-                        // specified location.
-mavlink.MAV_CMD_DO_SET_PARAMETER = 180 // Set a system parameter.  Caution!  Use of this command requires
-                        // knowledge of the numeric enumeration value
-                        // of the parameter.
-mavlink.MAV_CMD_DO_SET_RELAY = 181 // Set a relay to a condition.
-mavlink.MAV_CMD_DO_REPEAT_RELAY = 182 // Cycle a relay on and off for a desired number of cyles with a desired
-                        // period.
-mavlink.MAV_CMD_DO_SET_SERVO = 183 // Set a servo to a desired PWM value.
-mavlink.MAV_CMD_DO_REPEAT_SERVO = 184 // Cycle a between its nominal setting and a desired PWM for a desired
-                        // number of cycles with a desired period.
-mavlink.MAV_CMD_DO_CONTROL_VIDEO = 200 // Control onboard camera capturing.
-mavlink.MAV_CMD_DO_SET_ROI = 201 // Sets the region of interest (ROI) for a sensor set or the
-                        // vehicle itself. This can then be used by
-                        // the vehicles control
-                        // system to control the vehicle attitude and
-                        // the attitude of various
-                        // devices such as cameras.
-mavlink.MAV_CMD_DO_DIGICAM_CONFIGURE = 202 // Mission command to configure an on-board camera controller system.
-mavlink.MAV_CMD_DO_DIGICAM_CONTROL = 203 // Mission command to control an on-board camera controller system.
-mavlink.MAV_CMD_DO_MOUNT_CONFIGURE = 204 // Mission command to configure a camera or antenna mount
-mavlink.MAV_CMD_DO_MOUNT_CONTROL = 205 // Mission command to control a camera or antenna mount
-mavlink.MAV_CMD_DO_LAST = 240 // NOP - This command is only used to mark the upper limit of the DO
-                        // commands in the enumeration
-mavlink.MAV_CMD_PREFLIGHT_CALIBRATION = 241 // Trigger calibration. This command will be only accepted if in pre-
-                        // flight mode.
-mavlink.MAV_CMD_PREFLIGHT_STORAGE = 245 // Request storage of different parameter values and logs. This command
-                        // will be only accepted if in pre-flight
-                        // mode.
-mavlink.MAV_CMD_ENUM_END = 246 // 
-
+mavlink.MAV_CMD_NAV_WAYPOINT = 16; // Navigate to waypoint.
+mavlink.MAV_CMD_NAV_LOITER_UNLIM = 17; // Loiter around this waypoint an unlimited amount of time
+mavlink.MAV_CMD_NAV_LOITER_TURNS = 18; // Loiter around this waypoint for X turns
+mavlink.MAV_CMD_NAV_LOITER_TIME = 19; // Loiter around this waypoint for X seconds
+mavlink.MAV_CMD_NAV_RETURN_TO_LAUNCH = 20; // Return to launch location
+mavlink.MAV_CMD_NAV_LAND = 21; // Land at location
+mavlink.MAV_CMD_NAV_TAKEOFF = 22; // Takeoff from ground / hand
+mavlink.MAV_CMD_NAV_ROI = 80; // Sets the region of interest (ROI) for a sensor set or the
+// vehicle itself. This can then be used by
+// the vehicles control             system to
+// control the vehicle attitude and the
+// attitude of various             sensors
+// such as cameras.
+mavlink.MAV_CMD_NAV_PATHPLANNING = 81; // Control autonomous path planning on the MAV.
+mavlink.MAV_CMD_NAV_LAST = 95; // NOP - This command is only used to mark the upper limit of the
+// NAV/ACTION commands in the enumeration
+mavlink.MAV_CMD_CONDITION_DELAY = 112; // Delay mission state machine.
+mavlink.MAV_CMD_CONDITION_CHANGE_ALT = 113; // Ascend/descend at rate.  Delay mission state machine until desired
+// altitude reached.
+mavlink.MAV_CMD_CONDITION_DISTANCE = 114; // Delay mission state machine until within desired distance of next NAV
+// point.
+mavlink.MAV_CMD_CONDITION_YAW = 115; // Reach a certain target angle.
+mavlink.MAV_CMD_CONDITION_LAST = 159; // NOP - This command is only used to mark the upper limit of the
+// CONDITION commands in the enumeration
+mavlink.MAV_CMD_DO_SET_MODE = 176; // Set system mode.
+mavlink.MAV_CMD_DO_JUMP = 177; // Jump to the desired command in the mission list.  Repeat this action
+// only the specified number of times
+mavlink.MAV_CMD_DO_CHANGE_SPEED = 178; // Change speed and/or throttle set points.
+mavlink.MAV_CMD_DO_SET_HOME = 179; // Changes the home location either to the current location or a
+// specified location.
+mavlink.MAV_CMD_DO_SET_PARAMETER = 180; // Set a system parameter.  Caution!  Use of this command requires
+// knowledge of the numeric enumeration value
+// of the parameter.
+mavlink.MAV_CMD_DO_SET_RELAY = 181; // Set a relay to a condition.
+mavlink.MAV_CMD_DO_REPEAT_RELAY = 182; // Cycle a relay on and off for a desired number of cyles with a desired
+// period.
+mavlink.MAV_CMD_DO_SET_SERVO = 183; // Set a servo to a desired PWM value.
+mavlink.MAV_CMD_DO_REPEAT_SERVO = 184; // Cycle a between its nominal setting and a desired PWM for a desired
+// number of cycles with a desired period.
+mavlink.MAV_CMD_DO_CONTROL_VIDEO = 200; // Control onboard camera capturing.
+mavlink.MAV_CMD_DO_SET_ROI = 201; // Sets the region of interest (ROI) for a sensor set or the
+// vehicle itself. This can then be used by
+// the vehicles control
+// system to control the vehicle attitude and
+// the attitude of various
+// devices such as cameras.
+mavlink.MAV_CMD_DO_DIGICAM_CONFIGURE = 202; // Mission command to configure an on-board camera controller system.
+mavlink.MAV_CMD_DO_DIGICAM_CONTROL = 203; // Mission command to control an on-board camera controller system.
+mavlink.MAV_CMD_DO_MOUNT_CONFIGURE = 204; // Mission command to configure a camera or antenna mount
+mavlink.MAV_CMD_DO_MOUNT_CONTROL = 205; // Mission command to control a camera or antenna mount
+mavlink.MAV_CMD_DO_LAST = 240; // NOP - This command is only used to mark the upper limit of the DO
+// commands in the enumeration
+mavlink.MAV_CMD_PREFLIGHT_CALIBRATION = 241; // Trigger calibration. This command will be only accepted if in pre-
+// flight mode.
+mavlink.MAV_CMD_PREFLIGHT_STORAGE = 245; // Request storage of different parameter values and logs. This command
+// will be only accepted if in pre-flight
+// mode.
+mavlink.MAV_CMD_ENUM_END = 246; // 
 // FENCE_ACTION
-mavlink.FENCE_ACTION_NONE = 0 // Disable fenced mode
-mavlink.FENCE_ACTION_GUIDED = 1 // Switched to guided mode to return point (fence point 0)
-mavlink.FENCE_ACTION_ENUM_END = 2 // 
-
+mavlink.FENCE_ACTION_NONE = 0; // Disable fenced mode
+mavlink.FENCE_ACTION_GUIDED = 1; // Switched to guided mode to return point (fence point 0)
+mavlink.FENCE_ACTION_ENUM_END = 2; // 
 // FENCE_BREACH
-mavlink.FENCE_BREACH_NONE = 0 // No last fence breach
-mavlink.FENCE_BREACH_MINALT = 1 // Breached minimum altitude
-mavlink.FENCE_BREACH_MAXALT = 2 // Breached minimum altitude
-mavlink.FENCE_BREACH_BOUNDARY = 3 // Breached fence boundary
-mavlink.FENCE_BREACH_ENUM_END = 4 // 
-
+mavlink.FENCE_BREACH_NONE = 0; // No last fence breach
+mavlink.FENCE_BREACH_MINALT = 1; // Breached minimum altitude
+mavlink.FENCE_BREACH_MAXALT = 2; // Breached minimum altitude
+mavlink.FENCE_BREACH_BOUNDARY = 3; // Breached fence boundary
+mavlink.FENCE_BREACH_ENUM_END = 4; // 
 // MAV_DATA_STREAM
-mavlink.MAV_DATA_STREAM_ALL = 0 // Enable all data streams
-mavlink.MAV_DATA_STREAM_RAW_SENSORS = 1 // Enable IMU_RAW, GPS_RAW, GPS_STATUS packets.
-mavlink.MAV_DATA_STREAM_EXTENDED_STATUS = 2 // Enable GPS_STATUS, CONTROL_STATUS, AUX_STATUS
-mavlink.MAV_DATA_STREAM_RC_CHANNELS = 3 // Enable RC_CHANNELS_SCALED, RC_CHANNELS_RAW, SERVO_OUTPUT_RAW
-mavlink.MAV_DATA_STREAM_RAW_CONTROLLER = 4 // Enable ATTITUDE_CONTROLLER_OUTPUT, POSITION_CONTROLLER_OUTPUT,
-                        // NAV_CONTROLLER_OUTPUT.
-mavlink.MAV_DATA_STREAM_POSITION = 6 // Enable LOCAL_POSITION, GLOBAL_POSITION/GLOBAL_POSITION_INT messages.
-mavlink.MAV_DATA_STREAM_EXTRA1 = 10 // Dependent on the autopilot
-mavlink.MAV_DATA_STREAM_EXTRA2 = 11 // Dependent on the autopilot
-mavlink.MAV_DATA_STREAM_EXTRA3 = 12 // Dependent on the autopilot
-mavlink.MAV_DATA_STREAM_ENUM_END = 13 // 
-
+mavlink.MAV_DATA_STREAM_ALL = 0; // Enable all data streams
+mavlink.MAV_DATA_STREAM_RAW_SENSORS = 1; // Enable IMU_RAW, GPS_RAW, GPS_STATUS packets.
+mavlink.MAV_DATA_STREAM_EXTENDED_STATUS = 2; // Enable GPS_STATUS, CONTROL_STATUS, AUX_STATUS
+mavlink.MAV_DATA_STREAM_RC_CHANNELS = 3; // Enable RC_CHANNELS_SCALED, RC_CHANNELS_RAW, SERVO_OUTPUT_RAW
+mavlink.MAV_DATA_STREAM_RAW_CONTROLLER = 4; // Enable ATTITUDE_CONTROLLER_OUTPUT, POSITION_CONTROLLER_OUTPUT,
+// NAV_CONTROLLER_OUTPUT.
+mavlink.MAV_DATA_STREAM_POSITION = 6; // Enable LOCAL_POSITION, GLOBAL_POSITION/GLOBAL_POSITION_INT messages.
+mavlink.MAV_DATA_STREAM_EXTRA1 = 10; // Dependent on the autopilot
+mavlink.MAV_DATA_STREAM_EXTRA2 = 11; // Dependent on the autopilot
+mavlink.MAV_DATA_STREAM_EXTRA3 = 12; // Dependent on the autopilot
+mavlink.MAV_DATA_STREAM_ENUM_END = 13; // 
 // MAV_ROI
-mavlink.MAV_ROI_NONE = 0 // No region of interest.
-mavlink.MAV_ROI_WPNEXT = 1 // Point toward next waypoint.
-mavlink.MAV_ROI_WPINDEX = 2 // Point toward given waypoint.
-mavlink.MAV_ROI_LOCATION = 3 // Point toward fixed location.
-mavlink.MAV_ROI_TARGET = 4 // Point toward of given id.
-mavlink.MAV_ROI_ENUM_END = 5 // 
-
+mavlink.MAV_ROI_NONE = 0; // No region of interest.
+mavlink.MAV_ROI_WPNEXT = 1; // Point toward next waypoint.
+mavlink.MAV_ROI_WPINDEX = 2; // Point toward given waypoint.
+mavlink.MAV_ROI_LOCATION = 3; // Point toward fixed location.
+mavlink.MAV_ROI_TARGET = 4; // Point toward of given id.
+mavlink.MAV_ROI_ENUM_END = 5; // 
 // message IDs
-mavlink.MAVLINK_MSG_ID_BAD_DATA = -1
-mavlink.MAVLINK_MSG_ID_SENSOR_OFFSETS = 150
-mavlink.MAVLINK_MSG_ID_SET_MAG_OFFSETS = 151
-mavlink.MAVLINK_MSG_ID_MEMINFO = 152
-mavlink.MAVLINK_MSG_ID_AP_ADC = 153
-mavlink.MAVLINK_MSG_ID_DIGICAM_CONFIGURE = 154
-mavlink.MAVLINK_MSG_ID_DIGICAM_CONTROL = 155
-mavlink.MAVLINK_MSG_ID_MOUNT_CONFIGURE = 156
-mavlink.MAVLINK_MSG_ID_MOUNT_CONTROL = 157
-mavlink.MAVLINK_MSG_ID_MOUNT_STATUS = 158
-mavlink.MAVLINK_MSG_ID_FENCE_POINT = 160
-mavlink.MAVLINK_MSG_ID_FENCE_FETCH_POINT = 161
-mavlink.MAVLINK_MSG_ID_FENCE_STATUS = 162
-mavlink.MAVLINK_MSG_ID_AHRS = 163
-mavlink.MAVLINK_MSG_ID_SIMSTATE = 164
-mavlink.MAVLINK_MSG_ID_HWSTATUS = 165
-mavlink.MAVLINK_MSG_ID_RADIO = 166
-mavlink.MAVLINK_MSG_ID_HEARTBEAT = 0
-mavlink.MAVLINK_MSG_ID_BOOT = 1
-mavlink.MAVLINK_MSG_ID_SYSTEM_TIME = 2
-mavlink.MAVLINK_MSG_ID_PING = 3
-mavlink.MAVLINK_MSG_ID_SYSTEM_TIME_UTC = 4
-mavlink.MAVLINK_MSG_ID_CHANGE_OPERATOR_CONTROL = 5
-mavlink.MAVLINK_MSG_ID_CHANGE_OPERATOR_CONTROL_ACK = 6
-mavlink.MAVLINK_MSG_ID_AUTH_KEY = 7
-mavlink.MAVLINK_MSG_ID_ACTION_ACK = 9
-mavlink.MAVLINK_MSG_ID_ACTION = 10
-mavlink.MAVLINK_MSG_ID_SET_MODE = 11
-mavlink.MAVLINK_MSG_ID_SET_NAV_MODE = 12
-mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_READ = 20
-mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_LIST = 21
-mavlink.MAVLINK_MSG_ID_PARAM_VALUE = 22
-mavlink.MAVLINK_MSG_ID_PARAM_SET = 23
-mavlink.MAVLINK_MSG_ID_GPS_RAW_INT = 25
-mavlink.MAVLINK_MSG_ID_SCALED_IMU = 26
-mavlink.MAVLINK_MSG_ID_GPS_STATUS = 27
-mavlink.MAVLINK_MSG_ID_RAW_IMU = 28
-mavlink.MAVLINK_MSG_ID_RAW_PRESSURE = 29
-mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE = 38
-mavlink.MAVLINK_MSG_ID_ATTITUDE = 30
-mavlink.MAVLINK_MSG_ID_LOCAL_POSITION = 31
-mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION = 33
-mavlink.MAVLINK_MSG_ID_GPS_RAW = 32
-mavlink.MAVLINK_MSG_ID_SYS_STATUS = 34
-mavlink.MAVLINK_MSG_ID_RC_CHANNELS_RAW = 35
-mavlink.MAVLINK_MSG_ID_RC_CHANNELS_SCALED = 36
-mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW = 37
-mavlink.MAVLINK_MSG_ID_WAYPOINT = 39
-mavlink.MAVLINK_MSG_ID_WAYPOINT_REQUEST = 40
-mavlink.MAVLINK_MSG_ID_WAYPOINT_SET_CURRENT = 41
-mavlink.MAVLINK_MSG_ID_WAYPOINT_CURRENT = 42
-mavlink.MAVLINK_MSG_ID_WAYPOINT_REQUEST_LIST = 43
-mavlink.MAVLINK_MSG_ID_WAYPOINT_COUNT = 44
-mavlink.MAVLINK_MSG_ID_WAYPOINT_CLEAR_ALL = 45
-mavlink.MAVLINK_MSG_ID_WAYPOINT_REACHED = 46
-mavlink.MAVLINK_MSG_ID_WAYPOINT_ACK = 47
-mavlink.MAVLINK_MSG_ID_GPS_SET_GLOBAL_ORIGIN = 48
-mavlink.MAVLINK_MSG_ID_GPS_LOCAL_ORIGIN_SET = 49
-mavlink.MAVLINK_MSG_ID_LOCAL_POSITION_SETPOINT_SET = 50
-mavlink.MAVLINK_MSG_ID_LOCAL_POSITION_SETPOINT = 51
-mavlink.MAVLINK_MSG_ID_CONTROL_STATUS = 52
-mavlink.MAVLINK_MSG_ID_SAFETY_SET_ALLOWED_AREA = 53
-mavlink.MAVLINK_MSG_ID_SAFETY_ALLOWED_AREA = 54
-mavlink.MAVLINK_MSG_ID_SET_ROLL_PITCH_YAW_THRUST = 55
-mavlink.MAVLINK_MSG_ID_SET_ROLL_PITCH_YAW_SPEED_THRUST = 56
-mavlink.MAVLINK_MSG_ID_ROLL_PITCH_YAW_THRUST_SETPOINT = 57
-mavlink.MAVLINK_MSG_ID_ROLL_PITCH_YAW_SPEED_THRUST_SETPOINT = 58
-mavlink.MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT = 62
-mavlink.MAVLINK_MSG_ID_POSITION_TARGET = 63
-mavlink.MAVLINK_MSG_ID_STATE_CORRECTION = 64
-mavlink.MAVLINK_MSG_ID_SET_ALTITUDE = 65
-mavlink.MAVLINK_MSG_ID_REQUEST_DATA_STREAM = 66
-mavlink.MAVLINK_MSG_ID_HIL_STATE = 67
-mavlink.MAVLINK_MSG_ID_HIL_CONTROLS = 68
-mavlink.MAVLINK_MSG_ID_MANUAL_CONTROL = 69
-mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE = 70
-mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT = 73
-mavlink.MAVLINK_MSG_ID_VFR_HUD = 74
-mavlink.MAVLINK_MSG_ID_COMMAND = 75
-mavlink.MAVLINK_MSG_ID_COMMAND_ACK = 76
-mavlink.MAVLINK_MSG_ID_OPTICAL_FLOW = 100
-mavlink.MAVLINK_MSG_ID_OBJECT_DETECTION_EVENT = 140
-mavlink.MAVLINK_MSG_ID_DEBUG_VECT = 251
-mavlink.MAVLINK_MSG_ID_NAMED_VALUE_FLOAT = 252
-mavlink.MAVLINK_MSG_ID_NAMED_VALUE_INT = 253
-mavlink.MAVLINK_MSG_ID_STATUSTEXT = 254
-mavlink.MAVLINK_MSG_ID_DEBUG = 255
-
+mavlink.MAVLINK_MSG_ID_BAD_DATA = -1;
+mavlink.MAVLINK_MSG_ID_SENSOR_OFFSETS = 150;
+mavlink.MAVLINK_MSG_ID_SET_MAG_OFFSETS = 151;
+mavlink.MAVLINK_MSG_ID_MEMINFO = 152;
+mavlink.MAVLINK_MSG_ID_AP_ADC = 153;
+mavlink.MAVLINK_MSG_ID_DIGICAM_CONFIGURE = 154;
+mavlink.MAVLINK_MSG_ID_DIGICAM_CONTROL = 155;
+mavlink.MAVLINK_MSG_ID_MOUNT_CONFIGURE = 156;
+mavlink.MAVLINK_MSG_ID_MOUNT_CONTROL = 157;
+mavlink.MAVLINK_MSG_ID_MOUNT_STATUS = 158;
+mavlink.MAVLINK_MSG_ID_FENCE_POINT = 160;
+mavlink.MAVLINK_MSG_ID_FENCE_FETCH_POINT = 161;
+mavlink.MAVLINK_MSG_ID_FENCE_STATUS = 162;
+mavlink.MAVLINK_MSG_ID_AHRS = 163;
+mavlink.MAVLINK_MSG_ID_SIMSTATE = 164;
+mavlink.MAVLINK_MSG_ID_HWSTATUS = 165;
+mavlink.MAVLINK_MSG_ID_RADIO = 166;
+mavlink.MAVLINK_MSG_ID_HEARTBEAT = 0;
+mavlink.MAVLINK_MSG_ID_BOOT = 1;
+mavlink.MAVLINK_MSG_ID_SYSTEM_TIME = 2;
+mavlink.MAVLINK_MSG_ID_PING = 3;
+mavlink.MAVLINK_MSG_ID_SYSTEM_TIME_UTC = 4;
+mavlink.MAVLINK_MSG_ID_CHANGE_OPERATOR_CONTROL = 5;
+mavlink.MAVLINK_MSG_ID_CHANGE_OPERATOR_CONTROL_ACK = 6;
+mavlink.MAVLINK_MSG_ID_AUTH_KEY = 7;
+mavlink.MAVLINK_MSG_ID_ACTION_ACK = 9;
+mavlink.MAVLINK_MSG_ID_ACTION = 10;
+mavlink.MAVLINK_MSG_ID_SET_MODE = 11;
+mavlink.MAVLINK_MSG_ID_SET_NAV_MODE = 12;
+mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_READ = 20;
+mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_LIST = 21;
+mavlink.MAVLINK_MSG_ID_PARAM_VALUE = 22;
+mavlink.MAVLINK_MSG_ID_PARAM_SET = 23;
+mavlink.MAVLINK_MSG_ID_GPS_RAW_INT = 25;
+mavlink.MAVLINK_MSG_ID_SCALED_IMU = 26;
+mavlink.MAVLINK_MSG_ID_GPS_STATUS = 27;
+mavlink.MAVLINK_MSG_ID_RAW_IMU = 28;
+mavlink.MAVLINK_MSG_ID_RAW_PRESSURE = 29;
+mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE = 38;
+mavlink.MAVLINK_MSG_ID_ATTITUDE = 30;
+mavlink.MAVLINK_MSG_ID_LOCAL_POSITION = 31;
+mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION = 33;
+mavlink.MAVLINK_MSG_ID_GPS_RAW = 32;
+mavlink.MAVLINK_MSG_ID_SYS_STATUS = 34;
+mavlink.MAVLINK_MSG_ID_RC_CHANNELS_RAW = 35;
+mavlink.MAVLINK_MSG_ID_RC_CHANNELS_SCALED = 36;
+mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW = 37;
+mavlink.MAVLINK_MSG_ID_WAYPOINT = 39;
+mavlink.MAVLINK_MSG_ID_WAYPOINT_REQUEST = 40;
+mavlink.MAVLINK_MSG_ID_WAYPOINT_SET_CURRENT = 41;
+mavlink.MAVLINK_MSG_ID_WAYPOINT_CURRENT = 42;
+mavlink.MAVLINK_MSG_ID_WAYPOINT_REQUEST_LIST = 43;
+mavlink.MAVLINK_MSG_ID_WAYPOINT_COUNT = 44;
+mavlink.MAVLINK_MSG_ID_WAYPOINT_CLEAR_ALL = 45;
+mavlink.MAVLINK_MSG_ID_WAYPOINT_REACHED = 46;
+mavlink.MAVLINK_MSG_ID_WAYPOINT_ACK = 47;
+mavlink.MAVLINK_MSG_ID_GPS_SET_GLOBAL_ORIGIN = 48;
+mavlink.MAVLINK_MSG_ID_GPS_LOCAL_ORIGIN_SET = 49;
+mavlink.MAVLINK_MSG_ID_LOCAL_POSITION_SETPOINT_SET = 50;
+mavlink.MAVLINK_MSG_ID_LOCAL_POSITION_SETPOINT = 51;
+mavlink.MAVLINK_MSG_ID_CONTROL_STATUS = 52;
+mavlink.MAVLINK_MSG_ID_SAFETY_SET_ALLOWED_AREA = 53;
+mavlink.MAVLINK_MSG_ID_SAFETY_ALLOWED_AREA = 54;
+mavlink.MAVLINK_MSG_ID_SET_ROLL_PITCH_YAW_THRUST = 55;
+mavlink.MAVLINK_MSG_ID_SET_ROLL_PITCH_YAW_SPEED_THRUST = 56;
+mavlink.MAVLINK_MSG_ID_ROLL_PITCH_YAW_THRUST_SETPOINT = 57;
+mavlink.MAVLINK_MSG_ID_ROLL_PITCH_YAW_SPEED_THRUST_SETPOINT = 58;
+mavlink.MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT = 62;
+mavlink.MAVLINK_MSG_ID_POSITION_TARGET = 63;
+mavlink.MAVLINK_MSG_ID_STATE_CORRECTION = 64;
+mavlink.MAVLINK_MSG_ID_SET_ALTITUDE = 65;
+mavlink.MAVLINK_MSG_ID_REQUEST_DATA_STREAM = 66;
+mavlink.MAVLINK_MSG_ID_HIL_STATE = 67;
+mavlink.MAVLINK_MSG_ID_HIL_CONTROLS = 68;
+mavlink.MAVLINK_MSG_ID_MANUAL_CONTROL = 69;
+mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE = 70;
+mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT = 73;
+mavlink.MAVLINK_MSG_ID_VFR_HUD = 74;
+mavlink.MAVLINK_MSG_ID_COMMAND = 75;
+mavlink.MAVLINK_MSG_ID_COMMAND_ACK = 76;
+mavlink.MAVLINK_MSG_ID_OPTICAL_FLOW = 100;
+mavlink.MAVLINK_MSG_ID_OBJECT_DETECTION_EVENT = 140;
+mavlink.MAVLINK_MSG_ID_DEBUG_VECT = 251;
+mavlink.MAVLINK_MSG_ID_NAMED_VALUE_FLOAT = 252;
+mavlink.MAVLINK_MSG_ID_NAMED_VALUE_INT = 253;
+mavlink.MAVLINK_MSG_ID_STATUSTEXT = 254;
+mavlink.MAVLINK_MSG_ID_DEBUG = 255;
 mavlink.messages = {};
-
-/* 
+/*
 Offsets and calibrations values for hardware         sensors. This
 makes it easier to debug the calibration process.
 
@@ -305,28 +276,20 @@ makes it easier to debug the calibration process.
                 accel_cal_z               : accel Z calibration (float)
 
 */
-mavlink.messages.sensor_offsets = function(mag_ofs_x, mag_ofs_y, mag_ofs_z, mag_declination, raw_press, raw_temp, gyro_cal_x, gyro_cal_y, gyro_cal_z, accel_cal_x, accel_cal_y, accel_cal_z) {
-
+mavlink.messages.sensor_offsets = function (mag_ofs_x, mag_ofs_y, mag_ofs_z, mag_declination, raw_press, raw_temp, gyro_cal_x, gyro_cal_y, gyro_cal_z, accel_cal_x, accel_cal_y, accel_cal_z) {
     this.format = '>hhhfiiffffff';
     this.id = mavlink.MAVLINK_MSG_ID_SENSOR_OFFSETS;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     this.crc_extra = 143;
     this.name = 'SENSOR_OFFSETS';
-
     this.fieldnames = ['mag_ofs_x', 'mag_ofs_y', 'mag_ofs_z', 'mag_declination', 'raw_press', 'raw_temp', 'gyro_cal_x', 'gyro_cal_y', 'gyro_cal_z', 'accel_cal_x', 'accel_cal_y', 'accel_cal_z'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.sensor_offsets.prototype = new mavlink.message;
-
-mavlink.messages.sensor_offsets.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.mag_ofs_x, this.mag_ofs_y, this.mag_ofs_z, this.mag_declination, this.raw_press, this.raw_temp, this.gyro_cal_x, this.gyro_cal_y, this.gyro_cal_z, this.accel_cal_x, this.accel_cal_y, this.accel_cal_z]));
-}
-
-/* 
+mavlink.messages.sensor_offsets.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.mag_ofs_x, this.mag_ofs_y, this.mag_ofs_z, this.mag_declination, this.raw_press, this.raw_temp, this.gyro_cal_x, this.gyro_cal_y, this.gyro_cal_z, this.accel_cal_x, this.accel_cal_y, this.accel_cal_z]));
+};
+/*
 set the magnetometer offsets
 
                 target_system             : System ID (uint8_t)
@@ -336,56 +299,40 @@ set the magnetometer offsets
                 mag_ofs_z                 : magnetometer Z offset (int16_t)
 
 */
-mavlink.messages.set_mag_offsets = function(target_system, target_component, mag_ofs_x, mag_ofs_y, mag_ofs_z) {
-
+mavlink.messages.set_mag_offsets = function (target_system, target_component, mag_ofs_x, mag_ofs_y, mag_ofs_z) {
     this.format = '>BBhhh';
     this.id = mavlink.MAVLINK_MSG_ID_SET_MAG_OFFSETS;
     this.order_map = [0, 1, 2, 3, 4];
     this.crc_extra = 29;
     this.name = 'SET_MAG_OFFSETS';
-
     this.fieldnames = ['target_system', 'target_component', 'mag_ofs_x', 'mag_ofs_y', 'mag_ofs_z'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.set_mag_offsets.prototype = new mavlink.message;
-
-mavlink.messages.set_mag_offsets.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.mag_ofs_x, this.mag_ofs_y, this.mag_ofs_z]));
-}
-
-/* 
+mavlink.messages.set_mag_offsets.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.mag_ofs_x, this.mag_ofs_y, this.mag_ofs_z]));
+};
+/*
 state of APM memory
 
                 brkval                    : heap top (uint16_t)
                 freemem                   : free memory (uint16_t)
 
 */
-mavlink.messages.meminfo = function(brkval, freemem) {
-
+mavlink.messages.meminfo = function (brkval, freemem) {
     this.format = '>HH';
     this.id = mavlink.MAVLINK_MSG_ID_MEMINFO;
     this.order_map = [0, 1];
     this.crc_extra = 208;
     this.name = 'MEMINFO';
-
     this.fieldnames = ['brkval', 'freemem'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.meminfo.prototype = new mavlink.message;
-
-mavlink.messages.meminfo.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.brkval, this.freemem]));
-}
-
-/* 
+mavlink.messages.meminfo.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.brkval, this.freemem]));
+};
+/*
 raw ADC output
 
                 adc1                      : ADC output 1 (uint16_t)
@@ -396,28 +343,20 @@ raw ADC output
                 adc6                      : ADC output 6 (uint16_t)
 
 */
-mavlink.messages.ap_adc = function(adc1, adc2, adc3, adc4, adc5, adc6) {
-
+mavlink.messages.ap_adc = function (adc1, adc2, adc3, adc4, adc5, adc6) {
     this.format = '>HHHHHH';
     this.id = mavlink.MAVLINK_MSG_ID_AP_ADC;
     this.order_map = [0, 1, 2, 3, 4, 5];
     this.crc_extra = 188;
     this.name = 'AP_ADC';
-
     this.fieldnames = ['adc1', 'adc2', 'adc3', 'adc4', 'adc5', 'adc6'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.ap_adc.prototype = new mavlink.message;
-
-mavlink.messages.ap_adc.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.adc1, this.adc2, this.adc3, this.adc4, this.adc5, this.adc6]));
-}
-
-/* 
+mavlink.messages.ap_adc.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.adc1, this.adc2, this.adc3, this.adc4, this.adc5, this.adc6]));
+};
+/*
 Configure on-board Camera Control System.
 
                 target_system             : System ID (uint8_t)
@@ -433,28 +372,20 @@ Configure on-board Camera Control System.
                 extra_value               : Correspondent value to given extra_param (float)
 
 */
-mavlink.messages.digicam_configure = function(target_system, target_component, mode, shutter_speed, aperture, iso, exposure_type, command_id, engine_cut_off, extra_param, extra_value) {
-
+mavlink.messages.digicam_configure = function (target_system, target_component, mode, shutter_speed, aperture, iso, exposure_type, command_id, engine_cut_off, extra_param, extra_value) {
     this.format = '>BBBHBBBBBBf';
     this.id = mavlink.MAVLINK_MSG_ID_DIGICAM_CONFIGURE;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     this.crc_extra = 118;
     this.name = 'DIGICAM_CONFIGURE';
-
     this.fieldnames = ['target_system', 'target_component', 'mode', 'shutter_speed', 'aperture', 'iso', 'exposure_type', 'command_id', 'engine_cut_off', 'extra_param', 'extra_value'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.digicam_configure.prototype = new mavlink.message;
-
-mavlink.messages.digicam_configure.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.mode, this.shutter_speed, this.aperture, this.iso, this.exposure_type, this.command_id, this.engine_cut_off, this.extra_param, this.extra_value]));
-}
-
-/* 
+mavlink.messages.digicam_configure.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.mode, this.shutter_speed, this.aperture, this.iso, this.exposure_type, this.command_id, this.engine_cut_off, this.extra_param, this.extra_value]));
+};
+/*
 Control on-board Camera Control System to take shots.
 
                 target_system             : System ID (uint8_t)
@@ -469,28 +400,20 @@ Control on-board Camera Control System to take shots.
                 extra_value               : Correspondent value to given extra_param (float)
 
 */
-mavlink.messages.digicam_control = function(target_system, target_component, session, zoom_pos, zoom_step, focus_lock, shot, command_id, extra_param, extra_value) {
-
+mavlink.messages.digicam_control = function (target_system, target_component, session, zoom_pos, zoom_step, focus_lock, shot, command_id, extra_param, extra_value) {
     this.format = '>BBBBbBBBBf';
     this.id = mavlink.MAVLINK_MSG_ID_DIGICAM_CONTROL;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     this.crc_extra = 242;
     this.name = 'DIGICAM_CONTROL';
-
     this.fieldnames = ['target_system', 'target_component', 'session', 'zoom_pos', 'zoom_step', 'focus_lock', 'shot', 'command_id', 'extra_param', 'extra_value'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.digicam_control.prototype = new mavlink.message;
-
-mavlink.messages.digicam_control.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.session, this.zoom_pos, this.zoom_step, this.focus_lock, this.shot, this.command_id, this.extra_param, this.extra_value]));
-}
-
-/* 
+mavlink.messages.digicam_control.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.session, this.zoom_pos, this.zoom_step, this.focus_lock, this.shot, this.command_id, this.extra_param, this.extra_value]));
+};
+/*
 Message to configure a camera mount, directional antenna, etc.
 
                 target_system             : System ID (uint8_t)
@@ -501,28 +424,20 @@ Message to configure a camera mount, directional antenna, etc.
                 stab_yaw                  : (1 = yes, 0 = no) (uint8_t)
 
 */
-mavlink.messages.mount_configure = function(target_system, target_component, mount_mode, stab_roll, stab_pitch, stab_yaw) {
-
+mavlink.messages.mount_configure = function (target_system, target_component, mount_mode, stab_roll, stab_pitch, stab_yaw) {
     this.format = '>BBBBBB';
     this.id = mavlink.MAVLINK_MSG_ID_MOUNT_CONFIGURE;
     this.order_map = [0, 1, 2, 3, 4, 5];
     this.crc_extra = 19;
     this.name = 'MOUNT_CONFIGURE';
-
     this.fieldnames = ['target_system', 'target_component', 'mount_mode', 'stab_roll', 'stab_pitch', 'stab_yaw'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.mount_configure.prototype = new mavlink.message;
-
-mavlink.messages.mount_configure.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.mount_mode, this.stab_roll, this.stab_pitch, this.stab_yaw]));
-}
-
-/* 
+mavlink.messages.mount_configure.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.mount_mode, this.stab_roll, this.stab_pitch, this.stab_yaw]));
+};
+/*
 Message to control a camera mount, directional antenna, etc.
 
                 target_system             : System ID (uint8_t)
@@ -533,28 +448,20 @@ Message to control a camera mount, directional antenna, etc.
                 save_position             : if "1" it will save current trimmed position on EEPROM (just valid for NEUTRAL and LANDING) (uint8_t)
 
 */
-mavlink.messages.mount_control = function(target_system, target_component, input_a, input_b, input_c, save_position) {
-
+mavlink.messages.mount_control = function (target_system, target_component, input_a, input_b, input_c, save_position) {
     this.format = '>BBiiiB';
     this.id = mavlink.MAVLINK_MSG_ID_MOUNT_CONTROL;
     this.order_map = [0, 1, 2, 3, 4, 5];
     this.crc_extra = 97;
     this.name = 'MOUNT_CONTROL';
-
     this.fieldnames = ['target_system', 'target_component', 'input_a', 'input_b', 'input_c', 'save_position'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.mount_control.prototype = new mavlink.message;
-
-mavlink.messages.mount_control.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.input_a, this.input_b, this.input_c, this.save_position]));
-}
-
-/* 
+mavlink.messages.mount_control.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.input_a, this.input_b, this.input_c, this.save_position]));
+};
+/*
 Message with some status from APM to GCS about camera or antenna mount
 
                 target_system             : System ID (uint8_t)
@@ -564,28 +471,20 @@ Message with some status from APM to GCS about camera or antenna mount
                 pointing_c                : yaw(deg*100) or alt (in cm) depending on mount mode (int32_t)
 
 */
-mavlink.messages.mount_status = function(target_system, target_component, pointing_a, pointing_b, pointing_c) {
-
+mavlink.messages.mount_status = function (target_system, target_component, pointing_a, pointing_b, pointing_c) {
     this.format = '>BBiii';
     this.id = mavlink.MAVLINK_MSG_ID_MOUNT_STATUS;
     this.order_map = [0, 1, 2, 3, 4];
     this.crc_extra = 233;
     this.name = 'MOUNT_STATUS';
-
     this.fieldnames = ['target_system', 'target_component', 'pointing_a', 'pointing_b', 'pointing_c'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.mount_status.prototype = new mavlink.message;
-
-mavlink.messages.mount_status.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.pointing_a, this.pointing_b, this.pointing_c]));
-}
-
-/* 
+mavlink.messages.mount_status.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.pointing_a, this.pointing_b, this.pointing_c]));
+};
+/*
 A fence point. Used to set a point when from               GCS -> MAV.
 Also used to return a point from MAV -> GCS
 
@@ -597,28 +496,20 @@ Also used to return a point from MAV -> GCS
                 lng                       : Longitude of point (float)
 
 */
-mavlink.messages.fence_point = function(target_system, target_component, idx, count, lat, lng) {
-
+mavlink.messages.fence_point = function (target_system, target_component, idx, count, lat, lng) {
     this.format = '>BBBBff';
     this.id = mavlink.MAVLINK_MSG_ID_FENCE_POINT;
     this.order_map = [0, 1, 2, 3, 4, 5];
     this.crc_extra = 18;
     this.name = 'FENCE_POINT';
-
     this.fieldnames = ['target_system', 'target_component', 'idx', 'count', 'lat', 'lng'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.fence_point.prototype = new mavlink.message;
-
-mavlink.messages.fence_point.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.idx, this.count, this.lat, this.lng]));
-}
-
-/* 
+mavlink.messages.fence_point.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.idx, this.count, this.lat, this.lng]));
+};
+/*
 Request a current fence point from MAV
 
                 target_system             : System ID (uint8_t)
@@ -626,28 +517,20 @@ Request a current fence point from MAV
                 idx                       : point index (first point is 1, 0 is for return point) (uint8_t)
 
 */
-mavlink.messages.fence_fetch_point = function(target_system, target_component, idx) {
-
+mavlink.messages.fence_fetch_point = function (target_system, target_component, idx) {
     this.format = '>BBB';
     this.id = mavlink.MAVLINK_MSG_ID_FENCE_FETCH_POINT;
     this.order_map = [0, 1, 2];
     this.crc_extra = 68;
     this.name = 'FENCE_FETCH_POINT';
-
     this.fieldnames = ['target_system', 'target_component', 'idx'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.fence_fetch_point.prototype = new mavlink.message;
-
-mavlink.messages.fence_fetch_point.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.idx]));
-}
-
-/* 
+mavlink.messages.fence_fetch_point.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.idx]));
+};
+/*
 Status of geo-fencing. Sent in extended             status stream when
 fencing enabled
 
@@ -657,28 +540,20 @@ fencing enabled
                 breach_time               : time of last breach in milliseconds since boot (uint32_t)
 
 */
-mavlink.messages.fence_status = function(breach_status, breach_count, breach_type, breach_time) {
-
+mavlink.messages.fence_status = function (breach_status, breach_count, breach_type, breach_time) {
     this.format = '>BHBI';
     this.id = mavlink.MAVLINK_MSG_ID_FENCE_STATUS;
     this.order_map = [0, 1, 2, 3];
     this.crc_extra = 136;
     this.name = 'FENCE_STATUS';
-
     this.fieldnames = ['breach_status', 'breach_count', 'breach_type', 'breach_time'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.fence_status.prototype = new mavlink.message;
-
-mavlink.messages.fence_status.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.breach_status, this.breach_count, this.breach_type, this.breach_time]));
-}
-
-/* 
+mavlink.messages.fence_status.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.breach_status, this.breach_count, this.breach_type, this.breach_time]));
+};
+/*
 Status of DCM attitude estimator
 
                 omegaIx                   : X gyro drift estimate rad/s (float)
@@ -690,28 +565,20 @@ Status of DCM attitude estimator
                 error_yaw                 : average error_yaw value (float)
 
 */
-mavlink.messages.ahrs = function(omegaIx, omegaIy, omegaIz, accel_weight, renorm_val, error_rp, error_yaw) {
-
+mavlink.messages.ahrs = function (omegaIx, omegaIy, omegaIz, accel_weight, renorm_val, error_rp, error_yaw) {
     this.format = '>fffffff';
     this.id = mavlink.MAVLINK_MSG_ID_AHRS;
     this.order_map = [0, 1, 2, 3, 4, 5, 6];
     this.crc_extra = 127;
     this.name = 'AHRS';
-
     this.fieldnames = ['omegaIx', 'omegaIy', 'omegaIz', 'accel_weight', 'renorm_val', 'error_rp', 'error_yaw'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.ahrs.prototype = new mavlink.message;
-
-mavlink.messages.ahrs.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.omegaIx, this.omegaIy, this.omegaIz, this.accel_weight, this.renorm_val, this.error_rp, this.error_yaw]));
-}
-
-/* 
+mavlink.messages.ahrs.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.omegaIx, this.omegaIy, this.omegaIz, this.accel_weight, this.renorm_val, this.error_rp, this.error_yaw]));
+};
+/*
 Status of simulation environment, if used
 
                 roll                      : Roll angle (rad) (float)
@@ -725,56 +592,40 @@ Status of simulation environment, if used
                 zgyro                     : Angular speed around Z axis rad/s (float)
 
 */
-mavlink.messages.simstate = function(roll, pitch, yaw, xacc, yacc, zacc, xgyro, ygyro, zgyro) {
-
+mavlink.messages.simstate = function (roll, pitch, yaw, xacc, yacc, zacc, xgyro, ygyro, zgyro) {
     this.format = '>fffffffff';
     this.id = mavlink.MAVLINK_MSG_ID_SIMSTATE;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     this.crc_extra = 42;
     this.name = 'SIMSTATE';
-
     this.fieldnames = ['roll', 'pitch', 'yaw', 'xacc', 'yacc', 'zacc', 'xgyro', 'ygyro', 'zgyro'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.simstate.prototype = new mavlink.message;
-
-mavlink.messages.simstate.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.roll, this.pitch, this.yaw, this.xacc, this.yacc, this.zacc, this.xgyro, this.ygyro, this.zgyro]));
-}
-
-/* 
+mavlink.messages.simstate.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.roll, this.pitch, this.yaw, this.xacc, this.yacc, this.zacc, this.xgyro, this.ygyro, this.zgyro]));
+};
+/*
 Status of key hardware
 
                 Vcc                       : board voltage (mV) (uint16_t)
                 I2Cerr                    : I2C error count (uint8_t)
 
 */
-mavlink.messages.hwstatus = function(Vcc, I2Cerr) {
-
+mavlink.messages.hwstatus = function (Vcc, I2Cerr) {
     this.format = '>HB';
     this.id = mavlink.MAVLINK_MSG_ID_HWSTATUS;
     this.order_map = [0, 1];
     this.crc_extra = 21;
     this.name = 'HWSTATUS';
-
     this.fieldnames = ['Vcc', 'I2Cerr'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.hwstatus.prototype = new mavlink.message;
-
-mavlink.messages.hwstatus.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.Vcc, this.I2Cerr]));
-}
-
-/* 
+mavlink.messages.hwstatus.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.Vcc, this.I2Cerr]));
+};
+/*
 Status generated by radio
 
                 rssi                      : local signal strength (uint8_t)
@@ -786,28 +637,20 @@ Status generated by radio
                 fixed                     : count of error corrected packets (uint16_t)
 
 */
-mavlink.messages.radio = function(rssi, remrssi, txbuf, noise, remnoise, rxerrors, fixed) {
-
+mavlink.messages.radio = function (rssi, remrssi, txbuf, noise, remnoise, rxerrors, fixed) {
     this.format = '>BBBBBHH';
     this.id = mavlink.MAVLINK_MSG_ID_RADIO;
     this.order_map = [0, 1, 2, 3, 4, 5, 6];
     this.crc_extra = 93;
     this.name = 'RADIO';
-
     this.fieldnames = ['rssi', 'remrssi', 'txbuf', 'noise', 'remnoise', 'rxerrors', 'fixed'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.radio.prototype = new mavlink.message;
-
-mavlink.messages.radio.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.rssi, this.remrssi, this.txbuf, this.noise, this.remnoise, this.rxerrors, this.fixed]));
-}
-
-/* 
+mavlink.messages.radio.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.rssi, this.remrssi, this.txbuf, this.noise, this.remnoise, this.rxerrors, this.fixed]));
+};
+/*
 The heartbeat message shows that a system is present and responding.
 The type of the MAV and Autopilot hardware allow the receiving system
 to treat further messages from this system appropriate (e.g. by laying
@@ -818,28 +661,20 @@ out the user interface based on the autopilot).
                 mavlink_version           : MAVLink version (uint8_t)
 
 */
-mavlink.messages.heartbeat = function(type, autopilot, mavlink_version) {
-
+mavlink.messages.heartbeat = function (type, autopilot, mavlink_version) {
     this.format = '>BBB';
     this.id = mavlink.MAVLINK_MSG_ID_HEARTBEAT;
     this.order_map = [0, 1, 2];
     this.crc_extra = 72;
     this.name = 'HEARTBEAT';
-
     this.fieldnames = ['type', 'autopilot', 'mavlink_version'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.heartbeat.prototype = new mavlink.message;
-
-mavlink.messages.heartbeat.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.type, this.autopilot, this.mavlink_version]));
-}
-
-/* 
+mavlink.messages.heartbeat.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.type, this.autopilot, this.mavlink_version]));
+};
+/*
 The boot message indicates that a system is starting. The onboard
 software version allows to keep track of onboard soft/firmware
 revisions.
@@ -847,56 +682,40 @@ revisions.
                 version                   : The onboard software version (uint32_t)
 
 */
-mavlink.messages.boot = function(version) {
-
+mavlink.messages.boot = function (version) {
     this.format = '>I';
     this.id = mavlink.MAVLINK_MSG_ID_BOOT;
     this.order_map = [0];
     this.crc_extra = 39;
     this.name = 'BOOT';
-
     this.fieldnames = ['version'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.boot.prototype = new mavlink.message;
-
-mavlink.messages.boot.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.version]));
-}
-
-/* 
+mavlink.messages.boot.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.version]));
+};
+/*
 The system time is the time of the master clock, typically the
 computer clock of the main onboard computer.
 
                 time_usec                 : Timestamp of the master clock in microseconds since UNIX epoch. (uint64_t)
 
 */
-mavlink.messages.system_time = function(time_usec) {
-
+mavlink.messages.system_time = function (time_usec) {
     this.format = '>Q';
     this.id = mavlink.MAVLINK_MSG_ID_SYSTEM_TIME;
     this.order_map = [0];
     this.crc_extra = 190;
     this.name = 'SYSTEM_TIME';
-
     this.fieldnames = ['time_usec'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.system_time.prototype = new mavlink.message;
-
-mavlink.messages.system_time.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.time_usec]));
-}
-
-/* 
+mavlink.messages.system_time.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.time_usec]));
+};
+/*
 A ping message either requesting or responding to a ping. This allows
 to measure the system latencies, including serial port, radio modem
 and UDP connections.
@@ -907,56 +726,40 @@ and UDP connections.
                 time                      : Unix timestamp in microseconds (uint64_t)
 
 */
-mavlink.messages.ping = function(seq, target_system, target_component, time) {
-
+mavlink.messages.ping = function (seq, target_system, target_component, time) {
     this.format = '>IBBQ';
     this.id = mavlink.MAVLINK_MSG_ID_PING;
     this.order_map = [0, 1, 2, 3];
     this.crc_extra = 92;
     this.name = 'PING';
-
     this.fieldnames = ['seq', 'target_system', 'target_component', 'time'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.ping.prototype = new mavlink.message;
-
-mavlink.messages.ping.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.seq, this.target_system, this.target_component, this.time]));
-}
-
-/* 
+mavlink.messages.ping.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.seq, this.target_system, this.target_component, this.time]));
+};
+/*
 UTC date and time from GPS module
 
                 utc_date                  : GPS UTC date ddmmyy (uint32_t)
                 utc_time                  : GPS UTC time hhmmss (uint32_t)
 
 */
-mavlink.messages.system_time_utc = function(utc_date, utc_time) {
-
+mavlink.messages.system_time_utc = function (utc_date, utc_time) {
     this.format = '>II';
     this.id = mavlink.MAVLINK_MSG_ID_SYSTEM_TIME_UTC;
     this.order_map = [0, 1];
     this.crc_extra = 191;
     this.name = 'SYSTEM_TIME_UTC';
-
     this.fieldnames = ['utc_date', 'utc_time'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.system_time_utc.prototype = new mavlink.message;
-
-mavlink.messages.system_time_utc.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.utc_date, this.utc_time]));
-}
-
-/* 
+mavlink.messages.system_time_utc.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.utc_date, this.utc_time]));
+};
+/*
 Request to control this MAV
 
                 target_system             : System the GCS requests control for (uint8_t)
@@ -965,28 +768,20 @@ Request to control this MAV
                 passkey                   : Password / Key, depending on version plaintext or encrypted. 25 or less characters, NULL terminated. The characters may involve A-Z, a-z, 0-9, and "!?,.-" (char)
 
 */
-mavlink.messages.change_operator_control = function(target_system, control_request, version, passkey) {
-
+mavlink.messages.change_operator_control = function (target_system, control_request, version, passkey) {
     this.format = '>BBB25s';
     this.id = mavlink.MAVLINK_MSG_ID_CHANGE_OPERATOR_CONTROL;
     this.order_map = [0, 1, 2, 3];
     this.crc_extra = 217;
     this.name = 'CHANGE_OPERATOR_CONTROL';
-
     this.fieldnames = ['target_system', 'control_request', 'version', 'passkey'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.change_operator_control.prototype = new mavlink.message;
-
-mavlink.messages.change_operator_control.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.control_request, this.version, this.passkey]));
-}
-
-/* 
+mavlink.messages.change_operator_control.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.control_request, this.version, this.passkey]));
+};
+/*
 Accept / deny control of this MAV
 
                 gcs_system_id             : ID of the GCS this message (uint8_t)
@@ -994,28 +789,20 @@ Accept / deny control of this MAV
                 ack                       : 0: ACK, 1: NACK: Wrong passkey, 2: NACK: Unsupported passkey encryption method, 3: NACK: Already under control (uint8_t)
 
 */
-mavlink.messages.change_operator_control_ack = function(gcs_system_id, control_request, ack) {
-
+mavlink.messages.change_operator_control_ack = function (gcs_system_id, control_request, ack) {
     this.format = '>BBB';
     this.id = mavlink.MAVLINK_MSG_ID_CHANGE_OPERATOR_CONTROL_ACK;
     this.order_map = [0, 1, 2];
     this.crc_extra = 104;
     this.name = 'CHANGE_OPERATOR_CONTROL_ACK';
-
     this.fieldnames = ['gcs_system_id', 'control_request', 'ack'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.change_operator_control_ack.prototype = new mavlink.message;
-
-mavlink.messages.change_operator_control_ack.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.gcs_system_id, this.control_request, this.ack]));
-}
-
-/* 
+mavlink.messages.change_operator_control_ack.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.gcs_system_id, this.control_request, this.ack]));
+};
+/*
 Emit an encrypted signature / key identifying this system. PLEASE
 NOTE: This protocol has been kept simple, so transmitting the key
 requires an encrypted channel for true safety.
@@ -1023,28 +810,20 @@ requires an encrypted channel for true safety.
                 key                       : key (char)
 
 */
-mavlink.messages.auth_key = function(key) {
-
+mavlink.messages.auth_key = function (key) {
     this.format = '>32s';
     this.id = mavlink.MAVLINK_MSG_ID_AUTH_KEY;
     this.order_map = [0];
     this.crc_extra = 119;
     this.name = 'AUTH_KEY';
-
     this.fieldnames = ['key'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.auth_key.prototype = new mavlink.message;
-
-mavlink.messages.auth_key.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.key]));
-}
-
-/* 
+mavlink.messages.auth_key.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.key]));
+};
+/*
 This message acknowledges an action. IMPORTANT: The acknowledgement
 can be also negative, e.g. the MAV rejects a reset message because it
 is in-flight. The action ids are defined in ENUM MAV_ACTION in
@@ -1054,28 +833,20 @@ mavlink/include/mavlink_types.h
                 result                    : 0: Action DENIED, 1: Action executed (uint8_t)
 
 */
-mavlink.messages.action_ack = function(action, result) {
-
+mavlink.messages.action_ack = function (action, result) {
     this.format = '>BB';
     this.id = mavlink.MAVLINK_MSG_ID_ACTION_ACK;
     this.order_map = [0, 1];
     this.crc_extra = 219;
     this.name = 'ACTION_ACK';
-
     this.fieldnames = ['action', 'result'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.action_ack.prototype = new mavlink.message;
-
-mavlink.messages.action_ack.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.action, this.result]));
-}
-
-/* 
+mavlink.messages.action_ack.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.action, this.result]));
+};
+/*
 An action message allows to execute a certain onboard action. These
 include liftoff, land, storing parameters too EEPROM, shutddown, etc.
 The action ids are defined in ENUM MAV_ACTION in
@@ -1086,28 +857,20 @@ mavlink/include/mavlink_types.h
                 action                    : The action id (uint8_t)
 
 */
-mavlink.messages.action = function(target, target_component, action) {
-
+mavlink.messages.action = function (target, target_component, action) {
     this.format = '>BBB';
     this.id = mavlink.MAVLINK_MSG_ID_ACTION;
     this.order_map = [0, 1, 2];
     this.crc_extra = 60;
     this.name = 'ACTION';
-
     this.fieldnames = ['target', 'target_component', 'action'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.action.prototype = new mavlink.message;
-
-mavlink.messages.action.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target, this.target_component, this.action]));
-}
-
-/* 
+mavlink.messages.action.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target, this.target_component, this.action]));
+};
+/*
 Set the system mode, as defined by enum MAV_MODE in
 mavlink/include/mavlink_types.h. There is no target component id as
 the mode is by definition for the overall aircraft, not only for one
@@ -1117,28 +880,20 @@ component.
                 mode                      : The new mode (uint8_t)
 
 */
-mavlink.messages.set_mode = function(target, mode) {
-
+mavlink.messages.set_mode = function (target, mode) {
     this.format = '>BB';
     this.id = mavlink.MAVLINK_MSG_ID_SET_MODE;
     this.order_map = [0, 1];
     this.crc_extra = 186;
     this.name = 'SET_MODE';
-
     this.fieldnames = ['target', 'mode'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.set_mode.prototype = new mavlink.message;
-
-mavlink.messages.set_mode.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target, this.mode]));
-}
-
-/* 
+mavlink.messages.set_mode.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target, this.mode]));
+};
+/*
 Set the system navigation mode, as defined by enum MAV_NAV_MODE in
 mavlink/include/mavlink_types.h. The navigation mode applies to the
 whole aircraft and thus all components.
@@ -1147,28 +902,20 @@ whole aircraft and thus all components.
                 nav_mode                  : The new navigation mode (uint8_t)
 
 */
-mavlink.messages.set_nav_mode = function(target, nav_mode) {
-
+mavlink.messages.set_nav_mode = function (target, nav_mode) {
     this.format = '>BB';
     this.id = mavlink.MAVLINK_MSG_ID_SET_NAV_MODE;
     this.order_map = [0, 1];
     this.crc_extra = 10;
     this.name = 'SET_NAV_MODE';
-
     this.fieldnames = ['target', 'nav_mode'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.set_nav_mode.prototype = new mavlink.message;
-
-mavlink.messages.set_nav_mode.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target, this.nav_mode]));
-}
-
-/* 
+mavlink.messages.set_nav_mode.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target, this.nav_mode]));
+};
+/*
 Request to read the onboard parameter with the param_id string id.
 Onboard parameters are stored as key[const char*] -> value[float].
 This allows to send a parameter to any other component (such as the
@@ -1183,28 +930,20 @@ a full documentation of QGroundControl and IMU code.
                 param_index               : Parameter index. Send -1 to use the param ID field as identifier (int16_t)
 
 */
-mavlink.messages.param_request_read = function(target_system, target_component, param_id, param_index) {
-
+mavlink.messages.param_request_read = function (target_system, target_component, param_id, param_index) {
     this.format = '>BB15sh';
     this.id = mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_READ;
     this.order_map = [0, 1, 2, 3];
     this.crc_extra = 89;
     this.name = 'PARAM_REQUEST_READ';
-
     this.fieldnames = ['target_system', 'target_component', 'param_id', 'param_index'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.param_request_read.prototype = new mavlink.message;
-
-mavlink.messages.param_request_read.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.param_id, this.param_index]));
-}
-
-/* 
+mavlink.messages.param_request_read.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.param_id, this.param_index]));
+};
+/*
 Request all parameters of this component. After his request, all
 parameters are emitted.
 
@@ -1212,28 +951,20 @@ parameters are emitted.
                 target_component          : Component ID (uint8_t)
 
 */
-mavlink.messages.param_request_list = function(target_system, target_component) {
-
+mavlink.messages.param_request_list = function (target_system, target_component) {
     this.format = '>BB';
     this.id = mavlink.MAVLINK_MSG_ID_PARAM_REQUEST_LIST;
     this.order_map = [0, 1];
     this.crc_extra = 159;
     this.name = 'PARAM_REQUEST_LIST';
-
     this.fieldnames = ['target_system', 'target_component'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.param_request_list.prototype = new mavlink.message;
-
-mavlink.messages.param_request_list.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component]));
-}
-
-/* 
+mavlink.messages.param_request_list.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component]));
+};
+/*
 Emit the value of a onboard parameter. The inclusion of param_count
 and param_index in the message allows the recipient to keep track of
 received parameters and allows him to re-request missing parameters
@@ -1245,28 +976,20 @@ after a loss or timeout.
                 param_index               : Index of this onboard parameter (uint16_t)
 
 */
-mavlink.messages.param_value = function(param_id, param_value, param_count, param_index) {
-
+mavlink.messages.param_value = function (param_id, param_value, param_count, param_index) {
     this.format = '>15sfHH';
     this.id = mavlink.MAVLINK_MSG_ID_PARAM_VALUE;
     this.order_map = [0, 1, 2, 3];
     this.crc_extra = 162;
     this.name = 'PARAM_VALUE';
-
     this.fieldnames = ['param_id', 'param_value', 'param_count', 'param_index'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.param_value.prototype = new mavlink.message;
-
-mavlink.messages.param_value.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.param_id, this.param_value, this.param_count, this.param_index]));
-}
-
-/* 
+mavlink.messages.param_value.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.param_id, this.param_value, this.param_count, this.param_index]));
+};
+/*
 Set a parameter value TEMPORARILY to RAM. It will be reset to default
 on system reboot. Send the ACTION MAV_ACTION_STORAGE_WRITE to
 PERMANENTLY write the RAM contents to EEPROM. IMPORTANT: The receiving
@@ -1282,28 +1005,20 @@ within its timeout time, it should re-send the PARAM_SET message.
                 param_value               : Onboard parameter value (float)
 
 */
-mavlink.messages.param_set = function(target_system, target_component, param_id, param_value) {
-
+mavlink.messages.param_set = function (target_system, target_component, param_id, param_value) {
     this.format = '>BB15sf';
     this.id = mavlink.MAVLINK_MSG_ID_PARAM_SET;
     this.order_map = [0, 1, 2, 3];
     this.crc_extra = 121;
     this.name = 'PARAM_SET';
-
     this.fieldnames = ['target_system', 'target_component', 'param_id', 'param_value'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.param_set.prototype = new mavlink.message;
-
-mavlink.messages.param_set.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.param_id, this.param_value]));
-}
-
-/* 
+mavlink.messages.param_set.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.param_id, this.param_value]));
+};
+/*
 The global position, as returned by the Global Positioning System
 (GPS). This is NOT the global position estimate of the sytem, but
 rather a RAW sensor value. See message GLOBAL_POSITION for the global
@@ -1321,28 +1036,20 @@ frame)
                 hdg                       : Compass heading in degrees, 0..360 degrees (float)
 
 */
-mavlink.messages.gps_raw_int = function(usec, fix_type, lat, lon, alt, eph, epv, v, hdg) {
-
+mavlink.messages.gps_raw_int = function (usec, fix_type, lat, lon, alt, eph, epv, v, hdg) {
     this.format = '>QBiiiffff';
     this.id = mavlink.MAVLINK_MSG_ID_GPS_RAW_INT;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     this.crc_extra = 149;
     this.name = 'GPS_RAW_INT';
-
     this.fieldnames = ['usec', 'fix_type', 'lat', 'lon', 'alt', 'eph', 'epv', 'v', 'hdg'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.gps_raw_int.prototype = new mavlink.message;
-
-mavlink.messages.gps_raw_int.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.usec, this.fix_type, this.lat, this.lon, this.alt, this.eph, this.epv, this.v, this.hdg]));
-}
-
-/* 
+mavlink.messages.gps_raw_int.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.usec, this.fix_type, this.lat, this.lon, this.alt, this.eph, this.epv, this.v, this.hdg]));
+};
+/*
 The RAW IMU readings for the usual 9DOF sensor setup. This message
 should contain the scaled values to the described units
 
@@ -1358,28 +1065,20 @@ should contain the scaled values to the described units
                 zmag                      : Z Magnetic field (milli tesla) (int16_t)
 
 */
-mavlink.messages.scaled_imu = function(usec, xacc, yacc, zacc, xgyro, ygyro, zgyro, xmag, ymag, zmag) {
-
+mavlink.messages.scaled_imu = function (usec, xacc, yacc, zacc, xgyro, ygyro, zgyro, xmag, ymag, zmag) {
     this.format = '>Qhhhhhhhhh';
     this.id = mavlink.MAVLINK_MSG_ID_SCALED_IMU;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     this.crc_extra = 222;
     this.name = 'SCALED_IMU';
-
     this.fieldnames = ['usec', 'xacc', 'yacc', 'zacc', 'xgyro', 'ygyro', 'zgyro', 'xmag', 'ymag', 'zmag'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.scaled_imu.prototype = new mavlink.message;
-
-mavlink.messages.scaled_imu.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.usec, this.xacc, this.yacc, this.zacc, this.xgyro, this.ygyro, this.zgyro, this.xmag, this.ymag, this.zmag]));
-}
-
-/* 
+mavlink.messages.scaled_imu.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.usec, this.xacc, this.yacc, this.zacc, this.xgyro, this.ygyro, this.zgyro, this.xmag, this.ymag, this.zmag]));
+};
+/*
 The positioning status, as reported by GPS. This message is intended
 to display status information about each satellite visible to the
 receiver. See message GLOBAL_POSITION for the global position
@@ -1394,28 +1093,20 @@ satellites.
                 satellite_snr             : Signal to noise ratio of satellite (int8_t)
 
 */
-mavlink.messages.gps_status = function(satellites_visible, satellite_prn, satellite_used, satellite_elevation, satellite_azimuth, satellite_snr) {
-
+mavlink.messages.gps_status = function (satellites_visible, satellite_prn, satellite_used, satellite_elevation, satellite_azimuth, satellite_snr) {
     this.format = '>B20s20s20s20s20s';
     this.id = mavlink.MAVLINK_MSG_ID_GPS_STATUS;
     this.order_map = [0, 1, 2, 3, 4, 5];
     this.crc_extra = 110;
     this.name = 'GPS_STATUS';
-
     this.fieldnames = ['satellites_visible', 'satellite_prn', 'satellite_used', 'satellite_elevation', 'satellite_azimuth', 'satellite_snr'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.gps_status.prototype = new mavlink.message;
-
-mavlink.messages.gps_status.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.satellites_visible, this.satellite_prn, this.satellite_used, this.satellite_elevation, this.satellite_azimuth, this.satellite_snr]));
-}
-
-/* 
+mavlink.messages.gps_status.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.satellites_visible, this.satellite_prn, this.satellite_used, this.satellite_elevation, this.satellite_azimuth, this.satellite_snr]));
+};
+/*
 The RAW IMU readings for the usual 9DOF sensor setup. This message
 should always contain the true raw values without any scaling to allow
 data capture and system debugging.
@@ -1432,28 +1123,20 @@ data capture and system debugging.
                 zmag                      : Z Magnetic field (raw) (int16_t)
 
 */
-mavlink.messages.raw_imu = function(usec, xacc, yacc, zacc, xgyro, ygyro, zgyro, xmag, ymag, zmag) {
-
+mavlink.messages.raw_imu = function (usec, xacc, yacc, zacc, xgyro, ygyro, zgyro, xmag, ymag, zmag) {
     this.format = '>Qhhhhhhhhh';
     this.id = mavlink.MAVLINK_MSG_ID_RAW_IMU;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     this.crc_extra = 179;
     this.name = 'RAW_IMU';
-
     this.fieldnames = ['usec', 'xacc', 'yacc', 'zacc', 'xgyro', 'ygyro', 'zgyro', 'xmag', 'ymag', 'zmag'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.raw_imu.prototype = new mavlink.message;
-
-mavlink.messages.raw_imu.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.usec, this.xacc, this.yacc, this.zacc, this.xgyro, this.ygyro, this.zgyro, this.xmag, this.ymag, this.zmag]));
-}
-
-/* 
+mavlink.messages.raw_imu.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.usec, this.xacc, this.yacc, this.zacc, this.xgyro, this.ygyro, this.zgyro, this.xmag, this.ymag, this.zmag]));
+};
+/*
 The RAW pressure readings for the typical setup of one absolute
 pressure and one differential pressure sensor. The sensor values
 should be the raw, UNSCALED ADC values.
@@ -1465,28 +1148,20 @@ should be the raw, UNSCALED ADC values.
                 temperature               : Raw Temperature measurement (raw) (int16_t)
 
 */
-mavlink.messages.raw_pressure = function(usec, press_abs, press_diff1, press_diff2, temperature) {
-
+mavlink.messages.raw_pressure = function (usec, press_abs, press_diff1, press_diff2, temperature) {
     this.format = '>Qhhhh';
     this.id = mavlink.MAVLINK_MSG_ID_RAW_PRESSURE;
     this.order_map = [0, 1, 2, 3, 4];
     this.crc_extra = 136;
     this.name = 'RAW_PRESSURE';
-
     this.fieldnames = ['usec', 'press_abs', 'press_diff1', 'press_diff2', 'temperature'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.raw_pressure.prototype = new mavlink.message;
-
-mavlink.messages.raw_pressure.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.usec, this.press_abs, this.press_diff1, this.press_diff2, this.temperature]));
-}
-
-/* 
+mavlink.messages.raw_pressure.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.usec, this.press_abs, this.press_diff1, this.press_diff2, this.temperature]));
+};
+/*
 The pressure readings for the typical setup of one absolute and
 differential pressure sensor. The units are as specified in each
 field.
@@ -1497,28 +1172,20 @@ field.
                 temperature               : Temperature measurement (0.01 degrees celsius) (int16_t)
 
 */
-mavlink.messages.scaled_pressure = function(usec, press_abs, press_diff, temperature) {
-
+mavlink.messages.scaled_pressure = function (usec, press_abs, press_diff, temperature) {
     this.format = '>Qffh';
     this.id = mavlink.MAVLINK_MSG_ID_SCALED_PRESSURE;
     this.order_map = [0, 1, 2, 3];
     this.crc_extra = 229;
     this.name = 'SCALED_PRESSURE';
-
     this.fieldnames = ['usec', 'press_abs', 'press_diff', 'temperature'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.scaled_pressure.prototype = new mavlink.message;
-
-mavlink.messages.scaled_pressure.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.usec, this.press_abs, this.press_diff, this.temperature]));
-}
-
-/* 
+mavlink.messages.scaled_pressure.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.usec, this.press_abs, this.press_diff, this.temperature]));
+};
+/*
 The attitude in the aeronautical frame (right-handed, Z-down, X-front,
 Y-right).
 
@@ -1531,28 +1198,20 @@ Y-right).
                 yawspeed                  : Yaw angular speed (rad/s) (float)
 
 */
-mavlink.messages.attitude = function(usec, roll, pitch, yaw, rollspeed, pitchspeed, yawspeed) {
-
+mavlink.messages.attitude = function (usec, roll, pitch, yaw, rollspeed, pitchspeed, yawspeed) {
     this.format = '>Qffffff';
     this.id = mavlink.MAVLINK_MSG_ID_ATTITUDE;
     this.order_map = [0, 1, 2, 3, 4, 5, 6];
     this.crc_extra = 66;
     this.name = 'ATTITUDE';
-
     this.fieldnames = ['usec', 'roll', 'pitch', 'yaw', 'rollspeed', 'pitchspeed', 'yawspeed'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.attitude.prototype = new mavlink.message;
-
-mavlink.messages.attitude.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.usec, this.roll, this.pitch, this.yaw, this.rollspeed, this.pitchspeed, this.yawspeed]));
-}
-
-/* 
+mavlink.messages.attitude.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.usec, this.roll, this.pitch, this.yaw, this.rollspeed, this.pitchspeed, this.yawspeed]));
+};
+/*
 The filtered local position (e.g. fused computer vision and
 accelerometers). Coordinate frame is right-handed, Z-axis down
 (aeronautical frame)
@@ -1566,28 +1225,20 @@ accelerometers). Coordinate frame is right-handed, Z-axis down
                 vz                        : Z Speed (float)
 
 */
-mavlink.messages.local_position = function(usec, x, y, z, vx, vy, vz) {
-
+mavlink.messages.local_position = function (usec, x, y, z, vx, vy, vz) {
     this.format = '>Qffffff';
     this.id = mavlink.MAVLINK_MSG_ID_LOCAL_POSITION;
     this.order_map = [0, 1, 2, 3, 4, 5, 6];
     this.crc_extra = 126;
     this.name = 'LOCAL_POSITION';
-
     this.fieldnames = ['usec', 'x', 'y', 'z', 'vx', 'vy', 'vz'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.local_position.prototype = new mavlink.message;
-
-mavlink.messages.local_position.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.usec, this.x, this.y, this.z, this.vx, this.vy, this.vz]));
-}
-
-/* 
+mavlink.messages.local_position.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.usec, this.x, this.y, this.z, this.vx, this.vy, this.vz]));
+};
+/*
 The filtered global position (e.g. fused GPS and accelerometers).
 Coordinate frame is right-handed, Z-axis up (GPS frame)
 
@@ -1600,28 +1251,20 @@ Coordinate frame is right-handed, Z-axis up (GPS frame)
                 vz                        : Z Speed (in Altitude direction, positive: going up) (float)
 
 */
-mavlink.messages.global_position = function(usec, lat, lon, alt, vx, vy, vz) {
-
+mavlink.messages.global_position = function (usec, lat, lon, alt, vx, vy, vz) {
     this.format = '>Qffffff';
     this.id = mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION;
     this.order_map = [0, 1, 2, 3, 4, 5, 6];
     this.crc_extra = 147;
     this.name = 'GLOBAL_POSITION';
-
     this.fieldnames = ['usec', 'lat', 'lon', 'alt', 'vx', 'vy', 'vz'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.global_position.prototype = new mavlink.message;
-
-mavlink.messages.global_position.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.usec, this.lat, this.lon, this.alt, this.vx, this.vy, this.vz]));
-}
-
-/* 
+mavlink.messages.global_position.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.usec, this.lat, this.lon, this.alt, this.vx, this.vy, this.vz]));
+};
+/*
 The global position, as returned by the Global Positioning System
 (GPS). This is NOT the global position estimate of the sytem, but
 rather a RAW sensor value. See message GLOBAL_POSITION for the global
@@ -1639,28 +1282,20 @@ frame)
                 hdg                       : Compass heading in degrees, 0..360 degrees (float)
 
 */
-mavlink.messages.gps_raw = function(usec, fix_type, lat, lon, alt, eph, epv, v, hdg) {
-
+mavlink.messages.gps_raw = function (usec, fix_type, lat, lon, alt, eph, epv, v, hdg) {
     this.format = '>QBfffffff';
     this.id = mavlink.MAVLINK_MSG_ID_GPS_RAW;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     this.crc_extra = 185;
     this.name = 'GPS_RAW';
-
     this.fieldnames = ['usec', 'fix_type', 'lat', 'lon', 'alt', 'eph', 'epv', 'v', 'hdg'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.gps_raw.prototype = new mavlink.message;
-
-mavlink.messages.gps_raw.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.usec, this.fix_type, this.lat, this.lon, this.alt, this.eph, this.epv, this.v, this.hdg]));
-}
-
-/* 
+mavlink.messages.gps_raw.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.usec, this.fix_type, this.lat, this.lon, this.alt, this.eph, this.epv, this.v, this.hdg]));
+};
+/*
 The general system state. If the system is following the MAVLink
 standard, the system state is mainly defined by three orthogonal
 states/modes: The system mode, which is either LOCKED (motors shut
@@ -1686,28 +1321,20 @@ timeout.
                 packet_drop               : Dropped packets (packets that were corrupted on reception on the MAV) (uint16_t)
 
 */
-mavlink.messages.sys_status = function(mode, nav_mode, status, load, vbat, battery_remaining, packet_drop) {
-
+mavlink.messages.sys_status = function (mode, nav_mode, status, load, vbat, battery_remaining, packet_drop) {
     this.format = '>BBBHHHH';
     this.id = mavlink.MAVLINK_MSG_ID_SYS_STATUS;
     this.order_map = [0, 1, 2, 3, 4, 5, 6];
     this.crc_extra = 112;
     this.name = 'SYS_STATUS';
-
     this.fieldnames = ['mode', 'nav_mode', 'status', 'load', 'vbat', 'battery_remaining', 'packet_drop'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.sys_status.prototype = new mavlink.message;
-
-mavlink.messages.sys_status.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.mode, this.nav_mode, this.status, this.load, this.vbat, this.battery_remaining, this.packet_drop]));
-}
-
-/* 
+mavlink.messages.sys_status.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.mode, this.nav_mode, this.status, this.load, this.vbat, this.battery_remaining, this.packet_drop]));
+};
+/*
 The RAW values of the RC channels received. The standard PPM
 modulation is as follows: 1000 microseconds: 0%, 2000 microseconds:
 100%. Individual receivers/transmitters might violate this
@@ -1724,28 +1351,20 @@ specification.
                 rssi                      : Receive signal strength indicator, 0: 0%, 255: 100% (uint8_t)
 
 */
-mavlink.messages.rc_channels_raw = function(chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, rssi) {
-
+mavlink.messages.rc_channels_raw = function (chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw, rssi) {
     this.format = '>HHHHHHHHB';
     this.id = mavlink.MAVLINK_MSG_ID_RC_CHANNELS_RAW;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     this.crc_extra = 252;
     this.name = 'RC_CHANNELS_RAW';
-
     this.fieldnames = ['chan1_raw', 'chan2_raw', 'chan3_raw', 'chan4_raw', 'chan5_raw', 'chan6_raw', 'chan7_raw', 'chan8_raw', 'rssi'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.rc_channels_raw.prototype = new mavlink.message;
-
-mavlink.messages.rc_channels_raw.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.chan1_raw, this.chan2_raw, this.chan3_raw, this.chan4_raw, this.chan5_raw, this.chan6_raw, this.chan7_raw, this.chan8_raw, this.rssi]));
-}
-
-/* 
+mavlink.messages.rc_channels_raw.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.chan1_raw, this.chan2_raw, this.chan3_raw, this.chan4_raw, this.chan5_raw, this.chan6_raw, this.chan7_raw, this.chan8_raw, this.rssi]));
+};
+/*
 The scaled values of the RC channels received. (-100%) -10000, (0%) 0,
 (100%) 10000
 
@@ -1760,28 +1379,20 @@ The scaled values of the RC channels received. (-100%) -10000, (0%) 0,
                 rssi                      : Receive signal strength indicator, 0: 0%, 255: 100% (uint8_t)
 
 */
-mavlink.messages.rc_channels_scaled = function(chan1_scaled, chan2_scaled, chan3_scaled, chan4_scaled, chan5_scaled, chan6_scaled, chan7_scaled, chan8_scaled, rssi) {
-
+mavlink.messages.rc_channels_scaled = function (chan1_scaled, chan2_scaled, chan3_scaled, chan4_scaled, chan5_scaled, chan6_scaled, chan7_scaled, chan8_scaled, rssi) {
     this.format = '>hhhhhhhhB';
     this.id = mavlink.MAVLINK_MSG_ID_RC_CHANNELS_SCALED;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     this.crc_extra = 162;
     this.name = 'RC_CHANNELS_SCALED';
-
     this.fieldnames = ['chan1_scaled', 'chan2_scaled', 'chan3_scaled', 'chan4_scaled', 'chan5_scaled', 'chan6_scaled', 'chan7_scaled', 'chan8_scaled', 'rssi'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.rc_channels_scaled.prototype = new mavlink.message;
-
-mavlink.messages.rc_channels_scaled.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.chan1_scaled, this.chan2_scaled, this.chan3_scaled, this.chan4_scaled, this.chan5_scaled, this.chan6_scaled, this.chan7_scaled, this.chan8_scaled, this.rssi]));
-}
-
-/* 
+mavlink.messages.rc_channels_scaled.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.chan1_scaled, this.chan2_scaled, this.chan3_scaled, this.chan4_scaled, this.chan5_scaled, this.chan6_scaled, this.chan7_scaled, this.chan8_scaled, this.rssi]));
+};
+/*
 The RAW values of the servo outputs (for RC input from the remote, use
 the RC_CHANNELS messages). The standard PPM modulation is as follows:
 1000 microseconds: 0%, 2000 microseconds: 100%.
@@ -1796,28 +1407,20 @@ the RC_CHANNELS messages). The standard PPM modulation is as follows:
                 servo8_raw                : Servo output 8 value, in microseconds (uint16_t)
 
 */
-mavlink.messages.servo_output_raw = function(servo1_raw, servo2_raw, servo3_raw, servo4_raw, servo5_raw, servo6_raw, servo7_raw, servo8_raw) {
-
+mavlink.messages.servo_output_raw = function (servo1_raw, servo2_raw, servo3_raw, servo4_raw, servo5_raw, servo6_raw, servo7_raw, servo8_raw) {
     this.format = '>HHHHHHHH';
     this.id = mavlink.MAVLINK_MSG_ID_SERVO_OUTPUT_RAW;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7];
     this.crc_extra = 215;
     this.name = 'SERVO_OUTPUT_RAW';
-
     this.fieldnames = ['servo1_raw', 'servo2_raw', 'servo3_raw', 'servo4_raw', 'servo5_raw', 'servo6_raw', 'servo7_raw', 'servo8_raw'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.servo_output_raw.prototype = new mavlink.message;
-
-mavlink.messages.servo_output_raw.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.servo1_raw, this.servo2_raw, this.servo3_raw, this.servo4_raw, this.servo5_raw, this.servo6_raw, this.servo7_raw, this.servo8_raw]));
-}
-
-/* 
+mavlink.messages.servo_output_raw.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.servo1_raw, this.servo2_raw, this.servo3_raw, this.servo4_raw, this.servo5_raw, this.servo6_raw, this.servo7_raw, this.servo8_raw]));
+};
+/*
 Message encoding a waypoint. This message is emitted to announce
 the presence of a waypoint and to set a waypoint on the system. The
 waypoint can be either in x, y, z meters (type: LOCAL) or x:lat,
@@ -1840,28 +1443,20 @@ is Z-up, right handed
                 z                         : PARAM7 / z position: global: altitude (float)
 
 */
-mavlink.messages.waypoint = function(target_system, target_component, seq, frame, command, current, autocontinue, param1, param2, param3, param4, x, y, z) {
-
+mavlink.messages.waypoint = function (target_system, target_component, seq, frame, command, current, autocontinue, param1, param2, param3, param4, x, y, z) {
     this.format = '>BBHBBBBfffffff';
     this.id = mavlink.MAVLINK_MSG_ID_WAYPOINT;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
     this.crc_extra = 128;
     this.name = 'WAYPOINT';
-
     this.fieldnames = ['target_system', 'target_component', 'seq', 'frame', 'command', 'current', 'autocontinue', 'param1', 'param2', 'param3', 'param4', 'x', 'y', 'z'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.waypoint.prototype = new mavlink.message;
-
-mavlink.messages.waypoint.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.seq, this.frame, this.command, this.current, this.autocontinue, this.param1, this.param2, this.param3, this.param4, this.x, this.y, this.z]));
-}
-
-/* 
+mavlink.messages.waypoint.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.seq, this.frame, this.command, this.current, this.autocontinue, this.param1, this.param2, this.param3, this.param4, this.x, this.y, this.z]));
+};
+/*
 Request the information of the waypoint with the sequence number seq.
 The response of the system to this message should be a WAYPOINT
 message.
@@ -1871,28 +1466,20 @@ message.
                 seq                       : Sequence (uint16_t)
 
 */
-mavlink.messages.waypoint_request = function(target_system, target_component, seq) {
-
+mavlink.messages.waypoint_request = function (target_system, target_component, seq) {
     this.format = '>BBH';
     this.id = mavlink.MAVLINK_MSG_ID_WAYPOINT_REQUEST;
     this.order_map = [0, 1, 2];
     this.crc_extra = 9;
     this.name = 'WAYPOINT_REQUEST';
-
     this.fieldnames = ['target_system', 'target_component', 'seq'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.waypoint_request.prototype = new mavlink.message;
-
-mavlink.messages.waypoint_request.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.seq]));
-}
-
-/* 
+mavlink.messages.waypoint_request.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.seq]));
+};
+/*
 Set the waypoint with sequence number seq as current waypoint. This
 means that the MAV will continue to this waypoint on the shortest path
 (not following the waypoints in-between).
@@ -1902,84 +1489,60 @@ means that the MAV will continue to this waypoint on the shortest path
                 seq                       : Sequence (uint16_t)
 
 */
-mavlink.messages.waypoint_set_current = function(target_system, target_component, seq) {
-
+mavlink.messages.waypoint_set_current = function (target_system, target_component, seq) {
     this.format = '>BBH';
     this.id = mavlink.MAVLINK_MSG_ID_WAYPOINT_SET_CURRENT;
     this.order_map = [0, 1, 2];
     this.crc_extra = 106;
     this.name = 'WAYPOINT_SET_CURRENT';
-
     this.fieldnames = ['target_system', 'target_component', 'seq'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.waypoint_set_current.prototype = new mavlink.message;
-
-mavlink.messages.waypoint_set_current.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.seq]));
-}
-
-/* 
+mavlink.messages.waypoint_set_current.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.seq]));
+};
+/*
 Message that announces the sequence number of the current active
 waypoint. The MAV will fly towards this waypoint.
 
                 seq                       : Sequence (uint16_t)
 
 */
-mavlink.messages.waypoint_current = function(seq) {
-
+mavlink.messages.waypoint_current = function (seq) {
     this.format = '>H';
     this.id = mavlink.MAVLINK_MSG_ID_WAYPOINT_CURRENT;
     this.order_map = [0];
     this.crc_extra = 101;
     this.name = 'WAYPOINT_CURRENT';
-
     this.fieldnames = ['seq'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.waypoint_current.prototype = new mavlink.message;
-
-mavlink.messages.waypoint_current.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.seq]));
-}
-
-/* 
+mavlink.messages.waypoint_current.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.seq]));
+};
+/*
 Request the overall list of waypoints from the system/component.
 
                 target_system             : System ID (uint8_t)
                 target_component          : Component ID (uint8_t)
 
 */
-mavlink.messages.waypoint_request_list = function(target_system, target_component) {
-
+mavlink.messages.waypoint_request_list = function (target_system, target_component) {
     this.format = '>BB';
     this.id = mavlink.MAVLINK_MSG_ID_WAYPOINT_REQUEST_LIST;
     this.order_map = [0, 1];
     this.crc_extra = 213;
     this.name = 'WAYPOINT_REQUEST_LIST';
-
     this.fieldnames = ['target_system', 'target_component'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.waypoint_request_list.prototype = new mavlink.message;
-
-mavlink.messages.waypoint_request_list.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component]));
-}
-
-/* 
+mavlink.messages.waypoint_request_list.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component]));
+};
+/*
 This message is emitted as response to WAYPOINT_REQUEST_LIST by the
 MAV. The GCS can then request the individual waypoints based on the
 knowledge of the total number of waypoints.
@@ -1989,56 +1552,40 @@ knowledge of the total number of waypoints.
                 count                     : Number of Waypoints in the Sequence (uint16_t)
 
 */
-mavlink.messages.waypoint_count = function(target_system, target_component, count) {
-
+mavlink.messages.waypoint_count = function (target_system, target_component, count) {
     this.format = '>BBH';
     this.id = mavlink.MAVLINK_MSG_ID_WAYPOINT_COUNT;
     this.order_map = [0, 1, 2];
     this.crc_extra = 4;
     this.name = 'WAYPOINT_COUNT';
-
     this.fieldnames = ['target_system', 'target_component', 'count'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.waypoint_count.prototype = new mavlink.message;
-
-mavlink.messages.waypoint_count.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.count]));
-}
-
-/* 
+mavlink.messages.waypoint_count.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.count]));
+};
+/*
 Delete all waypoints at once.
 
                 target_system             : System ID (uint8_t)
                 target_component          : Component ID (uint8_t)
 
 */
-mavlink.messages.waypoint_clear_all = function(target_system, target_component) {
-
+mavlink.messages.waypoint_clear_all = function (target_system, target_component) {
     this.format = '>BB';
     this.id = mavlink.MAVLINK_MSG_ID_WAYPOINT_CLEAR_ALL;
     this.order_map = [0, 1];
     this.crc_extra = 229;
     this.name = 'WAYPOINT_CLEAR_ALL';
-
     this.fieldnames = ['target_system', 'target_component'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.waypoint_clear_all.prototype = new mavlink.message;
-
-mavlink.messages.waypoint_clear_all.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component]));
-}
-
-/* 
+mavlink.messages.waypoint_clear_all.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component]));
+};
+/*
 A certain waypoint has been reached. The system will either hold this
 position (or circle on the orbit) or (if the autocontinue on the WP
 was set) continue to the next waypoint.
@@ -2046,28 +1593,20 @@ was set) continue to the next waypoint.
                 seq                       : Sequence (uint16_t)
 
 */
-mavlink.messages.waypoint_reached = function(seq) {
-
+mavlink.messages.waypoint_reached = function (seq) {
     this.format = '>H';
     this.id = mavlink.MAVLINK_MSG_ID_WAYPOINT_REACHED;
     this.order_map = [0];
     this.crc_extra = 21;
     this.name = 'WAYPOINT_REACHED';
-
     this.fieldnames = ['seq'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.waypoint_reached.prototype = new mavlink.message;
-
-mavlink.messages.waypoint_reached.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.seq]));
-}
-
-/* 
+mavlink.messages.waypoint_reached.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.seq]));
+};
+/*
 Ack message during waypoint handling. The type field states if this
 message is a positive ack (type=0) or if an error happened (type=non-
 zero).
@@ -2077,28 +1616,20 @@ zero).
                 type                      : 0: OK, 1: Error (uint8_t)
 
 */
-mavlink.messages.waypoint_ack = function(target_system, target_component, type) {
-
+mavlink.messages.waypoint_ack = function (target_system, target_component, type) {
     this.format = '>BBB';
     this.id = mavlink.MAVLINK_MSG_ID_WAYPOINT_ACK;
     this.order_map = [0, 1, 2];
     this.crc_extra = 214;
     this.name = 'WAYPOINT_ACK';
-
     this.fieldnames = ['target_system', 'target_component', 'type'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.waypoint_ack.prototype = new mavlink.message;
-
-mavlink.messages.waypoint_ack.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.type]));
-}
-
-/* 
+mavlink.messages.waypoint_ack.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.type]));
+};
+/*
 As local waypoints exist, the global waypoint reference allows to
 transform between the local coordinate frame and the global (GPS)
 coordinate frame. This can be necessary when e.g. in- and outdoor
@@ -2111,28 +1642,20 @@ settings are connected and the MAV should move from in- to outdoor.
                 altitude                  : global position * 1000 (int32_t)
 
 */
-mavlink.messages.gps_set_global_origin = function(target_system, target_component, latitude, longitude, altitude) {
-
+mavlink.messages.gps_set_global_origin = function (target_system, target_component, latitude, longitude, altitude) {
     this.format = '>BBiii';
     this.id = mavlink.MAVLINK_MSG_ID_GPS_SET_GLOBAL_ORIGIN;
     this.order_map = [0, 1, 2, 3, 4];
     this.crc_extra = 215;
     this.name = 'GPS_SET_GLOBAL_ORIGIN';
-
     this.fieldnames = ['target_system', 'target_component', 'latitude', 'longitude', 'altitude'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.gps_set_global_origin.prototype = new mavlink.message;
-
-mavlink.messages.gps_set_global_origin.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.latitude, this.longitude, this.altitude]));
-}
-
-/* 
+mavlink.messages.gps_set_global_origin.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.latitude, this.longitude, this.altitude]));
+};
+/*
 Once the MAV sets a new GPS-Local correspondence, this message
 announces the origin (0,0,0) position
 
@@ -2141,28 +1664,20 @@ announces the origin (0,0,0) position
                 altitude                  : Altitude(WGS84), expressed as * 1000 (int32_t)
 
 */
-mavlink.messages.gps_local_origin_set = function(latitude, longitude, altitude) {
-
+mavlink.messages.gps_local_origin_set = function (latitude, longitude, altitude) {
     this.format = '>iii';
     this.id = mavlink.MAVLINK_MSG_ID_GPS_LOCAL_ORIGIN_SET;
     this.order_map = [0, 1, 2];
     this.crc_extra = 14;
     this.name = 'GPS_LOCAL_ORIGIN_SET';
-
     this.fieldnames = ['latitude', 'longitude', 'altitude'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.gps_local_origin_set.prototype = new mavlink.message;
-
-mavlink.messages.gps_local_origin_set.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.latitude, this.longitude, this.altitude]));
-}
-
-/* 
+mavlink.messages.gps_local_origin_set.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.latitude, this.longitude, this.altitude]));
+};
+/*
 Set the setpoint for a local position controller. This is the position
 in local coordinates the MAV should fly to. This message is sent by
 the path/waypoint planner to the onboard position controller. As some
@@ -2177,28 +1692,20 @@ helicopters/quadrotors), the desired yaw angle is part of the message.
                 yaw                       : Desired yaw angle (float)
 
 */
-mavlink.messages.local_position_setpoint_set = function(target_system, target_component, x, y, z, yaw) {
-
+mavlink.messages.local_position_setpoint_set = function (target_system, target_component, x, y, z, yaw) {
     this.format = '>BBffff';
     this.id = mavlink.MAVLINK_MSG_ID_LOCAL_POSITION_SETPOINT_SET;
     this.order_map = [0, 1, 2, 3, 4, 5];
     this.crc_extra = 206;
     this.name = 'LOCAL_POSITION_SETPOINT_SET';
-
     this.fieldnames = ['target_system', 'target_component', 'x', 'y', 'z', 'yaw'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.local_position_setpoint_set.prototype = new mavlink.message;
-
-mavlink.messages.local_position_setpoint_set.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.x, this.y, this.z, this.yaw]));
-}
-
-/* 
+mavlink.messages.local_position_setpoint_set.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.x, this.y, this.z, this.yaw]));
+};
+/*
 Transmit the current local setpoint of the controller to other MAVs
 (collision avoidance) and to the GCS.
 
@@ -2208,28 +1715,20 @@ Transmit the current local setpoint of the controller to other MAVs
                 yaw                       : Desired yaw angle (float)
 
 */
-mavlink.messages.local_position_setpoint = function(x, y, z, yaw) {
-
+mavlink.messages.local_position_setpoint = function (x, y, z, yaw) {
     this.format = '>ffff';
     this.id = mavlink.MAVLINK_MSG_ID_LOCAL_POSITION_SETPOINT;
     this.order_map = [0, 1, 2, 3];
     this.crc_extra = 50;
     this.name = 'LOCAL_POSITION_SETPOINT';
-
     this.fieldnames = ['x', 'y', 'z', 'yaw'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.local_position_setpoint.prototype = new mavlink.message;
-
-mavlink.messages.local_position_setpoint.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.x, this.y, this.z, this.yaw]));
-}
-
-/* 
+mavlink.messages.local_position_setpoint.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.x, this.y, this.z, this.yaw]));
+};
+/*
 
 
                 position_fix              : Position fix: 0: lost, 2: 2D position fix, 3: 3D position fix (uint8_t)
@@ -2242,28 +1741,20 @@ mavlink.messages.local_position_setpoint.prototype.pack = function(mav) {
                 control_pos_yaw           : 0: Yaw angle control disabled, 1: enabled (uint8_t)
 
 */
-mavlink.messages.control_status = function(position_fix, vision_fix, gps_fix, ahrs_health, control_att, control_pos_xy, control_pos_z, control_pos_yaw) {
-
+mavlink.messages.control_status = function (position_fix, vision_fix, gps_fix, ahrs_health, control_att, control_pos_xy, control_pos_z, control_pos_yaw) {
     this.format = '>BBBBBBBB';
     this.id = mavlink.MAVLINK_MSG_ID_CONTROL_STATUS;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7];
     this.crc_extra = 157;
     this.name = 'CONTROL_STATUS';
-
     this.fieldnames = ['position_fix', 'vision_fix', 'gps_fix', 'ahrs_health', 'control_att', 'control_pos_xy', 'control_pos_z', 'control_pos_yaw'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.control_status.prototype = new mavlink.message;
-
-mavlink.messages.control_status.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.position_fix, this.vision_fix, this.gps_fix, this.ahrs_health, this.control_att, this.control_pos_xy, this.control_pos_z, this.control_pos_yaw]));
-}
-
-/* 
+mavlink.messages.control_status.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.position_fix, this.vision_fix, this.gps_fix, this.ahrs_health, this.control_att, this.control_pos_xy, this.control_pos_z, this.control_pos_yaw]));
+};
+/*
 Set a safety zone (volume), which is defined by two corners of a cube.
 This message can be used to tell the MAV which setpoints/waypoints to
 accept and which to reject. Safety areas are often enforced by
@@ -2280,28 +1771,20 @@ national or competition regulations.
                 p2z                       : z position 2 / Altitude 2 (float)
 
 */
-mavlink.messages.safety_set_allowed_area = function(target_system, target_component, frame, p1x, p1y, p1z, p2x, p2y, p2z) {
-
+mavlink.messages.safety_set_allowed_area = function (target_system, target_component, frame, p1x, p1y, p1z, p2x, p2y, p2z) {
     this.format = '>BBBffffff';
     this.id = mavlink.MAVLINK_MSG_ID_SAFETY_SET_ALLOWED_AREA;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     this.crc_extra = 126;
     this.name = 'SAFETY_SET_ALLOWED_AREA';
-
     this.fieldnames = ['target_system', 'target_component', 'frame', 'p1x', 'p1y', 'p1z', 'p2x', 'p2y', 'p2z'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.safety_set_allowed_area.prototype = new mavlink.message;
-
-mavlink.messages.safety_set_allowed_area.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.frame, this.p1x, this.p1y, this.p1z, this.p2x, this.p2y, this.p2z]));
-}
-
-/* 
+mavlink.messages.safety_set_allowed_area.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.frame, this.p1x, this.p1y, this.p1z, this.p2x, this.p2y, this.p2z]));
+};
+/*
 Read out the safety zone the MAV currently assumes.
 
                 frame                     : Coordinate frame, as defined by MAV_FRAME enum in mavlink_types.h. Can be either global, GPS, right-handed with Z axis up or local, right handed, Z axis down. (uint8_t)
@@ -2313,28 +1796,20 @@ Read out the safety zone the MAV currently assumes.
                 p2z                       : z position 2 / Altitude 2 (float)
 
 */
-mavlink.messages.safety_allowed_area = function(frame, p1x, p1y, p1z, p2x, p2y, p2z) {
-
+mavlink.messages.safety_allowed_area = function (frame, p1x, p1y, p1z, p2x, p2y, p2z) {
     this.format = '>Bffffff';
     this.id = mavlink.MAVLINK_MSG_ID_SAFETY_ALLOWED_AREA;
     this.order_map = [0, 1, 2, 3, 4, 5, 6];
     this.crc_extra = 108;
     this.name = 'SAFETY_ALLOWED_AREA';
-
     this.fieldnames = ['frame', 'p1x', 'p1y', 'p1z', 'p2x', 'p2y', 'p2z'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.safety_allowed_area.prototype = new mavlink.message;
-
-mavlink.messages.safety_allowed_area.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.frame, this.p1x, this.p1y, this.p1z, this.p2x, this.p2y, this.p2z]));
-}
-
-/* 
+mavlink.messages.safety_allowed_area.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.frame, this.p1x, this.p1y, this.p1z, this.p2x, this.p2y, this.p2z]));
+};
+/*
 Set roll, pitch and yaw.
 
                 target_system             : System ID (uint8_t)
@@ -2345,28 +1820,20 @@ Set roll, pitch and yaw.
                 thrust                    : Collective thrust, normalized to 0 .. 1 (float)
 
 */
-mavlink.messages.set_roll_pitch_yaw_thrust = function(target_system, target_component, roll, pitch, yaw, thrust) {
-
+mavlink.messages.set_roll_pitch_yaw_thrust = function (target_system, target_component, roll, pitch, yaw, thrust) {
     this.format = '>BBffff';
     this.id = mavlink.MAVLINK_MSG_ID_SET_ROLL_PITCH_YAW_THRUST;
     this.order_map = [0, 1, 2, 3, 4, 5];
     this.crc_extra = 213;
     this.name = 'SET_ROLL_PITCH_YAW_THRUST';
-
     this.fieldnames = ['target_system', 'target_component', 'roll', 'pitch', 'yaw', 'thrust'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.set_roll_pitch_yaw_thrust.prototype = new mavlink.message;
-
-mavlink.messages.set_roll_pitch_yaw_thrust.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.roll, this.pitch, this.yaw, this.thrust]));
-}
-
-/* 
+mavlink.messages.set_roll_pitch_yaw_thrust.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.roll, this.pitch, this.yaw, this.thrust]));
+};
+/*
 Set roll, pitch and yaw.
 
                 target_system             : System ID (uint8_t)
@@ -2377,28 +1844,20 @@ Set roll, pitch and yaw.
                 thrust                    : Collective thrust, normalized to 0 .. 1 (float)
 
 */
-mavlink.messages.set_roll_pitch_yaw_speed_thrust = function(target_system, target_component, roll_speed, pitch_speed, yaw_speed, thrust) {
-
+mavlink.messages.set_roll_pitch_yaw_speed_thrust = function (target_system, target_component, roll_speed, pitch_speed, yaw_speed, thrust) {
     this.format = '>BBffff';
     this.id = mavlink.MAVLINK_MSG_ID_SET_ROLL_PITCH_YAW_SPEED_THRUST;
     this.order_map = [0, 1, 2, 3, 4, 5];
     this.crc_extra = 95;
     this.name = 'SET_ROLL_PITCH_YAW_SPEED_THRUST';
-
     this.fieldnames = ['target_system', 'target_component', 'roll_speed', 'pitch_speed', 'yaw_speed', 'thrust'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.set_roll_pitch_yaw_speed_thrust.prototype = new mavlink.message;
-
-mavlink.messages.set_roll_pitch_yaw_speed_thrust.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.roll_speed, this.pitch_speed, this.yaw_speed, this.thrust]));
-}
-
-/* 
+mavlink.messages.set_roll_pitch_yaw_speed_thrust.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.roll_speed, this.pitch_speed, this.yaw_speed, this.thrust]));
+};
+/*
 Setpoint in roll, pitch, yaw currently active on the system.
 
                 time_us                   : Timestamp in micro seconds since unix epoch (uint64_t)
@@ -2408,28 +1867,20 @@ Setpoint in roll, pitch, yaw currently active on the system.
                 thrust                    : Collective thrust, normalized to 0 .. 1 (float)
 
 */
-mavlink.messages.roll_pitch_yaw_thrust_setpoint = function(time_us, roll, pitch, yaw, thrust) {
-
+mavlink.messages.roll_pitch_yaw_thrust_setpoint = function (time_us, roll, pitch, yaw, thrust) {
     this.format = '>Qffff';
     this.id = mavlink.MAVLINK_MSG_ID_ROLL_PITCH_YAW_THRUST_SETPOINT;
     this.order_map = [0, 1, 2, 3, 4];
     this.crc_extra = 5;
     this.name = 'ROLL_PITCH_YAW_THRUST_SETPOINT';
-
     this.fieldnames = ['time_us', 'roll', 'pitch', 'yaw', 'thrust'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.roll_pitch_yaw_thrust_setpoint.prototype = new mavlink.message;
-
-mavlink.messages.roll_pitch_yaw_thrust_setpoint.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.time_us, this.roll, this.pitch, this.yaw, this.thrust]));
-}
-
-/* 
+mavlink.messages.roll_pitch_yaw_thrust_setpoint.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.time_us, this.roll, this.pitch, this.yaw, this.thrust]));
+};
+/*
 Setpoint in rollspeed, pitchspeed, yawspeed currently active on the
 system.
 
@@ -2440,28 +1891,20 @@ system.
                 thrust                    : Collective thrust, normalized to 0 .. 1 (float)
 
 */
-mavlink.messages.roll_pitch_yaw_speed_thrust_setpoint = function(time_us, roll_speed, pitch_speed, yaw_speed, thrust) {
-
+mavlink.messages.roll_pitch_yaw_speed_thrust_setpoint = function (time_us, roll_speed, pitch_speed, yaw_speed, thrust) {
     this.format = '>Qffff';
     this.id = mavlink.MAVLINK_MSG_ID_ROLL_PITCH_YAW_SPEED_THRUST_SETPOINT;
     this.order_map = [0, 1, 2, 3, 4];
     this.crc_extra = 127;
     this.name = 'ROLL_PITCH_YAW_SPEED_THRUST_SETPOINT';
-
     this.fieldnames = ['time_us', 'roll_speed', 'pitch_speed', 'yaw_speed', 'thrust'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.roll_pitch_yaw_speed_thrust_setpoint.prototype = new mavlink.message;
-
-mavlink.messages.roll_pitch_yaw_speed_thrust_setpoint.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.time_us, this.roll_speed, this.pitch_speed, this.yaw_speed, this.thrust]));
-}
-
-/* 
+mavlink.messages.roll_pitch_yaw_speed_thrust_setpoint.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.time_us, this.roll_speed, this.pitch_speed, this.yaw_speed, this.thrust]));
+};
+/*
 Outputs of the APM navigation controller. The primary use of this
 message is to check the response and signs of the controller before
 actual flight and to assist with tuning controller parameters
@@ -2476,28 +1919,20 @@ actual flight and to assist with tuning controller parameters
                 xtrack_error              : Current crosstrack error on x-y plane in meters (float)
 
 */
-mavlink.messages.nav_controller_output = function(nav_roll, nav_pitch, nav_bearing, target_bearing, wp_dist, alt_error, aspd_error, xtrack_error) {
-
+mavlink.messages.nav_controller_output = function (nav_roll, nav_pitch, nav_bearing, target_bearing, wp_dist, alt_error, aspd_error, xtrack_error) {
     this.format = '>ffhhHfff';
     this.id = mavlink.MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7];
     this.crc_extra = 57;
     this.name = 'NAV_CONTROLLER_OUTPUT';
-
     this.fieldnames = ['nav_roll', 'nav_pitch', 'nav_bearing', 'target_bearing', 'wp_dist', 'alt_error', 'aspd_error', 'xtrack_error'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.nav_controller_output.prototype = new mavlink.message;
-
-mavlink.messages.nav_controller_output.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.nav_roll, this.nav_pitch, this.nav_bearing, this.target_bearing, this.wp_dist, this.alt_error, this.aspd_error, this.xtrack_error]));
-}
-
-/* 
+mavlink.messages.nav_controller_output.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.nav_roll, this.nav_pitch, this.nav_bearing, this.target_bearing, this.wp_dist, this.alt_error, this.aspd_error, this.xtrack_error]));
+};
+/*
 The goal position of the system. This position is the input to any
 navigation or path planning algorithm and does NOT represent the
 current controller setpoint.
@@ -2508,28 +1943,20 @@ current controller setpoint.
                 yaw                       : yaw orientation in radians, 0 = NORTH (float)
 
 */
-mavlink.messages.position_target = function(x, y, z, yaw) {
-
+mavlink.messages.position_target = function (x, y, z, yaw) {
     this.format = '>ffff';
     this.id = mavlink.MAVLINK_MSG_ID_POSITION_TARGET;
     this.order_map = [0, 1, 2, 3];
     this.crc_extra = 126;
     this.name = 'POSITION_TARGET';
-
     this.fieldnames = ['x', 'y', 'z', 'yaw'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.position_target.prototype = new mavlink.message;
-
-mavlink.messages.position_target.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.x, this.y, this.z, this.yaw]));
-}
-
-/* 
+mavlink.messages.position_target.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.x, this.y, this.z, this.yaw]));
+};
+/*
 Corrects the systems state by adding an error correction term to the
 position and velocity, and by rotating the attitude by a correction
 angle.
@@ -2545,56 +1972,40 @@ angle.
                 vzErr                     : z velocity (float)
 
 */
-mavlink.messages.state_correction = function(xErr, yErr, zErr, rollErr, pitchErr, yawErr, vxErr, vyErr, vzErr) {
-
+mavlink.messages.state_correction = function (xErr, yErr, zErr, rollErr, pitchErr, yawErr, vxErr, vyErr, vzErr) {
     this.format = '>fffffffff';
     this.id = mavlink.MAVLINK_MSG_ID_STATE_CORRECTION;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     this.crc_extra = 130;
     this.name = 'STATE_CORRECTION';
-
     this.fieldnames = ['xErr', 'yErr', 'zErr', 'rollErr', 'pitchErr', 'yawErr', 'vxErr', 'vyErr', 'vzErr'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.state_correction.prototype = new mavlink.message;
-
-mavlink.messages.state_correction.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.xErr, this.yErr, this.zErr, this.rollErr, this.pitchErr, this.yawErr, this.vxErr, this.vyErr, this.vzErr]));
-}
-
-/* 
+mavlink.messages.state_correction.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.xErr, this.yErr, this.zErr, this.rollErr, this.pitchErr, this.yawErr, this.vxErr, this.vyErr, this.vzErr]));
+};
+/*
 
 
                 target                    : The system setting the altitude (uint8_t)
                 mode                      : The new altitude in meters (uint32_t)
 
 */
-mavlink.messages.set_altitude = function(target, mode) {
-
+mavlink.messages.set_altitude = function (target, mode) {
     this.format = '>BI';
     this.id = mavlink.MAVLINK_MSG_ID_SET_ALTITUDE;
     this.order_map = [0, 1];
     this.crc_extra = 119;
     this.name = 'SET_ALTITUDE';
-
     this.fieldnames = ['target', 'mode'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.set_altitude.prototype = new mavlink.message;
-
-mavlink.messages.set_altitude.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target, this.mode]));
-}
-
-/* 
+mavlink.messages.set_altitude.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target, this.mode]));
+};
+/*
 
 
                 target_system             : The target requested to send the message stream. (uint8_t)
@@ -2604,28 +2015,20 @@ mavlink.messages.set_altitude.prototype.pack = function(mav) {
                 start_stop                : 1 to start sending, 0 to stop sending. (uint8_t)
 
 */
-mavlink.messages.request_data_stream = function(target_system, target_component, req_stream_id, req_message_rate, start_stop) {
-
+mavlink.messages.request_data_stream = function (target_system, target_component, req_stream_id, req_message_rate, start_stop) {
     this.format = '>BBBHB';
     this.id = mavlink.MAVLINK_MSG_ID_REQUEST_DATA_STREAM;
     this.order_map = [0, 1, 2, 3, 4];
     this.crc_extra = 193;
     this.name = 'REQUEST_DATA_STREAM';
-
     this.fieldnames = ['target_system', 'target_component', 'req_stream_id', 'req_message_rate', 'start_stop'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.request_data_stream.prototype = new mavlink.message;
-
-mavlink.messages.request_data_stream.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.req_stream_id, this.req_message_rate, this.start_stop]));
-}
-
-/* 
+mavlink.messages.request_data_stream.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.req_stream_id, this.req_message_rate, this.start_stop]));
+};
+/*
 This packet is useful for high throughput                 applications
 such as hardware in the loop simulations.
 
@@ -2647,28 +2050,20 @@ such as hardware in the loop simulations.
                 zacc                      : Z acceleration (mg) (int16_t)
 
 */
-mavlink.messages.hil_state = function(usec, roll, pitch, yaw, rollspeed, pitchspeed, yawspeed, lat, lon, alt, vx, vy, vz, xacc, yacc, zacc) {
-
+mavlink.messages.hil_state = function (usec, roll, pitch, yaw, rollspeed, pitchspeed, yawspeed, lat, lon, alt, vx, vy, vz, xacc, yacc, zacc) {
     this.format = '>Qffffffiiihhhhhh';
     this.id = mavlink.MAVLINK_MSG_ID_HIL_STATE;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
     this.crc_extra = 191;
     this.name = 'HIL_STATE';
-
     this.fieldnames = ['usec', 'roll', 'pitch', 'yaw', 'rollspeed', 'pitchspeed', 'yawspeed', 'lat', 'lon', 'alt', 'vx', 'vy', 'vz', 'xacc', 'yacc', 'zacc'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.hil_state.prototype = new mavlink.message;
-
-mavlink.messages.hil_state.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.usec, this.roll, this.pitch, this.yaw, this.rollspeed, this.pitchspeed, this.yawspeed, this.lat, this.lon, this.alt, this.vx, this.vy, this.vz, this.xacc, this.yacc, this.zacc]));
-}
-
-/* 
+mavlink.messages.hil_state.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.usec, this.roll, this.pitch, this.yaw, this.rollspeed, this.pitchspeed, this.yawspeed, this.lat, this.lon, this.alt, this.vx, this.vy, this.vz, this.xacc, this.yacc, this.zacc]));
+};
+/*
 Hardware in the loop control outputs
 
                 time_us                   : Timestamp (microseconds since UNIX epoch or microseconds since system boot) (uint64_t)
@@ -2680,28 +2075,20 @@ Hardware in the loop control outputs
                 nav_mode                  : Navigation mode (MAV_NAV_MODE) (uint8_t)
 
 */
-mavlink.messages.hil_controls = function(time_us, roll_ailerons, pitch_elevator, yaw_rudder, throttle, mode, nav_mode) {
-
+mavlink.messages.hil_controls = function (time_us, roll_ailerons, pitch_elevator, yaw_rudder, throttle, mode, nav_mode) {
     this.format = '>QffffBB';
     this.id = mavlink.MAVLINK_MSG_ID_HIL_CONTROLS;
     this.order_map = [0, 1, 2, 3, 4, 5, 6];
     this.crc_extra = 236;
     this.name = 'HIL_CONTROLS';
-
     this.fieldnames = ['time_us', 'roll_ailerons', 'pitch_elevator', 'yaw_rudder', 'throttle', 'mode', 'nav_mode'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.hil_controls.prototype = new mavlink.message;
-
-mavlink.messages.hil_controls.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.time_us, this.roll_ailerons, this.pitch_elevator, this.yaw_rudder, this.throttle, this.mode, this.nav_mode]));
-}
-
-/* 
+mavlink.messages.hil_controls.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.time_us, this.roll_ailerons, this.pitch_elevator, this.yaw_rudder, this.throttle, this.mode, this.nav_mode]));
+};
+/*
 
 
                 target                    : The system to be controlled (uint8_t)
@@ -2715,28 +2102,20 @@ mavlink.messages.hil_controls.prototype.pack = function(mav) {
                 thrust_manual             : thrust auto:0, manual:1 (uint8_t)
 
 */
-mavlink.messages.manual_control = function(target, roll, pitch, yaw, thrust, roll_manual, pitch_manual, yaw_manual, thrust_manual) {
-
+mavlink.messages.manual_control = function (target, roll, pitch, yaw, thrust, roll_manual, pitch_manual, yaw_manual, thrust_manual) {
     this.format = '>BffffBBBB';
     this.id = mavlink.MAVLINK_MSG_ID_MANUAL_CONTROL;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8];
     this.crc_extra = 158;
     this.name = 'MANUAL_CONTROL';
-
     this.fieldnames = ['target', 'roll', 'pitch', 'yaw', 'thrust', 'roll_manual', 'pitch_manual', 'yaw_manual', 'thrust_manual'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.manual_control.prototype = new mavlink.message;
-
-mavlink.messages.manual_control.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target, this.roll, this.pitch, this.yaw, this.thrust, this.roll_manual, this.pitch_manual, this.yaw_manual, this.thrust_manual]));
-}
-
-/* 
+mavlink.messages.manual_control.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target, this.roll, this.pitch, this.yaw, this.thrust, this.roll_manual, this.pitch_manual, this.yaw_manual, this.thrust_manual]));
+};
+/*
 The RAW values of the RC channels sent to the MAV to override info
 received from the RC radio. A value of -1 means no change to that
 channel. A value of 0 means control of that channel should be released
@@ -2756,28 +2135,20 @@ receivers/transmitters might violate this specification.
                 chan8_raw                 : RC channel 8 value, in microseconds (uint16_t)
 
 */
-mavlink.messages.rc_channels_override = function(target_system, target_component, chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw) {
-
+mavlink.messages.rc_channels_override = function (target_system, target_component, chan1_raw, chan2_raw, chan3_raw, chan4_raw, chan5_raw, chan6_raw, chan7_raw, chan8_raw) {
     this.format = '>BBHHHHHHHH';
     this.id = mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     this.crc_extra = 143;
     this.name = 'RC_CHANNELS_OVERRIDE';
-
     this.fieldnames = ['target_system', 'target_component', 'chan1_raw', 'chan2_raw', 'chan3_raw', 'chan4_raw', 'chan5_raw', 'chan6_raw', 'chan7_raw', 'chan8_raw'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.rc_channels_override.prototype = new mavlink.message;
-
-mavlink.messages.rc_channels_override.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.chan1_raw, this.chan2_raw, this.chan3_raw, this.chan4_raw, this.chan5_raw, this.chan6_raw, this.chan7_raw, this.chan8_raw]));
-}
-
-/* 
+mavlink.messages.rc_channels_override.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.chan1_raw, this.chan2_raw, this.chan3_raw, this.chan4_raw, this.chan5_raw, this.chan6_raw, this.chan7_raw, this.chan8_raw]));
+};
+/*
 The filtered global position (e.g. fused GPS and accelerometers). The
 position is in GPS-frame (right-handed, Z-up)
 
@@ -2789,28 +2160,20 @@ position is in GPS-frame (right-handed, Z-up)
                 vz                        : Ground Z Speed (Altitude), expressed as m/s * 100 (int16_t)
 
 */
-mavlink.messages.global_position_int = function(lat, lon, alt, vx, vy, vz) {
-
+mavlink.messages.global_position_int = function (lat, lon, alt, vx, vy, vz) {
     this.format = '>iiihhh';
     this.id = mavlink.MAVLINK_MSG_ID_GLOBAL_POSITION_INT;
     this.order_map = [0, 1, 2, 3, 4, 5];
     this.crc_extra = 104;
     this.name = 'GLOBAL_POSITION_INT';
-
     this.fieldnames = ['lat', 'lon', 'alt', 'vx', 'vy', 'vz'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.global_position_int.prototype = new mavlink.message;
-
-mavlink.messages.global_position_int.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.lat, this.lon, this.alt, this.vx, this.vy, this.vz]));
-}
-
-/* 
+mavlink.messages.global_position_int.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.lat, this.lon, this.alt, this.vx, this.vy, this.vz]));
+};
+/*
 Metrics typically displayed on a HUD for fixed wing aircraft
 
                 airspeed                  : Current airspeed in m/s (float)
@@ -2821,28 +2184,20 @@ Metrics typically displayed on a HUD for fixed wing aircraft
                 climb                     : Current climb rate in meters/second (float)
 
 */
-mavlink.messages.vfr_hud = function(airspeed, groundspeed, heading, throttle, alt, climb) {
-
+mavlink.messages.vfr_hud = function (airspeed, groundspeed, heading, throttle, alt, climb) {
     this.format = '>ffhHff';
     this.id = mavlink.MAVLINK_MSG_ID_VFR_HUD;
     this.order_map = [0, 1, 2, 3, 4, 5];
     this.crc_extra = 123;
     this.name = 'VFR_HUD';
-
     this.fieldnames = ['airspeed', 'groundspeed', 'heading', 'throttle', 'alt', 'climb'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.vfr_hud.prototype = new mavlink.message;
-
-mavlink.messages.vfr_hud.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.airspeed, this.groundspeed, this.heading, this.throttle, this.alt, this.climb]));
-}
-
-/* 
+mavlink.messages.vfr_hud.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.airspeed, this.groundspeed, this.heading, this.throttle, this.alt, this.climb]));
+};
+/*
 Send a command with up to four parameters to the MAV
 
                 target_system             : System which should execute the command (uint8_t)
@@ -2855,28 +2210,20 @@ Send a command with up to four parameters to the MAV
                 param4                    : Parameter 4, as defined by MAV_CMD enum. (float)
 
 */
-mavlink.messages.command = function(target_system, target_component, command, confirmation, param1, param2, param3, param4) {
-
+mavlink.messages.command = function (target_system, target_component, command, confirmation, param1, param2, param3, param4) {
     this.format = '>BBBBffff';
     this.id = mavlink.MAVLINK_MSG_ID_COMMAND;
     this.order_map = [0, 1, 2, 3, 4, 5, 6, 7];
     this.crc_extra = 131;
     this.name = 'COMMAND';
-
     this.fieldnames = ['target_system', 'target_component', 'command', 'confirmation', 'param1', 'param2', 'param3', 'param4'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.command.prototype = new mavlink.message;
-
-mavlink.messages.command.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.target_system, this.target_component, this.command, this.confirmation, this.param1, this.param2, this.param3, this.param4]));
-}
-
-/* 
+mavlink.messages.command.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.target_system, this.target_component, this.command, this.confirmation, this.param1, this.param2, this.param3, this.param4]));
+};
+/*
 Report status of a command. Includes feedback wether the command was
 executed
 
@@ -2884,28 +2231,20 @@ executed
                 result                    : 1: Action ACCEPTED and EXECUTED, 1: Action TEMPORARY REJECTED/DENIED, 2: Action PERMANENTLY DENIED, 3: Action UNKNOWN/UNSUPPORTED, 4: Requesting CONFIRMATION (float)
 
 */
-mavlink.messages.command_ack = function(command, result) {
-
+mavlink.messages.command_ack = function (command, result) {
     this.format = '>ff';
     this.id = mavlink.MAVLINK_MSG_ID_COMMAND_ACK;
     this.order_map = [0, 1];
     this.crc_extra = 8;
     this.name = 'COMMAND_ACK';
-
     this.fieldnames = ['command', 'result'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.command_ack.prototype = new mavlink.message;
-
-mavlink.messages.command_ack.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.command, this.result]));
-}
-
-/* 
+mavlink.messages.command_ack.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.command, this.result]));
+};
+/*
 Optical flow from a flow sensor (e.g. optical mouse sensor)
 
                 time                      : Timestamp (UNIX) (uint64_t)
@@ -2916,28 +2255,20 @@ Optical flow from a flow sensor (e.g. optical mouse sensor)
                 ground_distance           : Ground distance in meters (float)
 
 */
-mavlink.messages.optical_flow = function(time, sensor_id, flow_x, flow_y, quality, ground_distance) {
-
+mavlink.messages.optical_flow = function (time, sensor_id, flow_x, flow_y, quality, ground_distance) {
     this.format = '>QBhhBf';
     this.id = mavlink.MAVLINK_MSG_ID_OPTICAL_FLOW;
     this.order_map = [0, 1, 2, 3, 4, 5];
     this.crc_extra = 174;
     this.name = 'OPTICAL_FLOW';
-
     this.fieldnames = ['time', 'sensor_id', 'flow_x', 'flow_y', 'quality', 'ground_distance'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.optical_flow.prototype = new mavlink.message;
-
-mavlink.messages.optical_flow.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.time, this.sensor_id, this.flow_x, this.flow_y, this.quality, this.ground_distance]));
-}
-
-/* 
+mavlink.messages.optical_flow.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.time, this.sensor_id, this.flow_x, this.flow_y, this.quality, this.ground_distance]));
+};
+/*
 Object has been detected
 
                 time                      : Timestamp in milliseconds since system boot (uint32_t)
@@ -2949,28 +2280,20 @@ Object has been detected
                 distance                  : Ground distance in meters (float)
 
 */
-mavlink.messages.object_detection_event = function(time, object_id, type, name, quality, bearing, distance) {
-
+mavlink.messages.object_detection_event = function (time, object_id, type, name, quality, bearing, distance) {
     this.format = '>IHB20sBff';
     this.id = mavlink.MAVLINK_MSG_ID_OBJECT_DETECTION_EVENT;
     this.order_map = [0, 1, 2, 3, 4, 5, 6];
     this.crc_extra = 155;
     this.name = 'OBJECT_DETECTION_EVENT';
-
     this.fieldnames = ['time', 'object_id', 'type', 'name', 'quality', 'bearing', 'distance'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.object_detection_event.prototype = new mavlink.message;
-
-mavlink.messages.object_detection_event.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.time, this.object_id, this.type, this.name, this.quality, this.bearing, this.distance]));
-}
-
-/* 
+mavlink.messages.object_detection_event.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.time, this.object_id, this.type, this.name, this.quality, this.bearing, this.distance]));
+};
+/*
 
 
                 name                      : Name (char)
@@ -2980,28 +2303,20 @@ mavlink.messages.object_detection_event.prototype.pack = function(mav) {
                 z                         : z (float)
 
 */
-mavlink.messages.debug_vect = function(name, usec, x, y, z) {
-
+mavlink.messages.debug_vect = function (name, usec, x, y, z) {
     this.format = '>10sQfff';
     this.id = mavlink.MAVLINK_MSG_ID_DEBUG_VECT;
     this.order_map = [0, 1, 2, 3, 4];
     this.crc_extra = 178;
     this.name = 'DEBUG_VECT';
-
     this.fieldnames = ['name', 'usec', 'x', 'y', 'z'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.debug_vect.prototype = new mavlink.message;
-
-mavlink.messages.debug_vect.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.name, this.usec, this.x, this.y, this.z]));
-}
-
-/* 
+mavlink.messages.debug_vect.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.name, this.usec, this.x, this.y, this.z]));
+};
+/*
 Send a key-value pair as float. The use of this message is discouraged
 for normal packets, but a quite efficient way for testing new messages
 and getting experimental debug output.
@@ -3010,28 +2325,20 @@ and getting experimental debug output.
                 value                     : Floating point value (float)
 
 */
-mavlink.messages.named_value_float = function(name, value) {
-
+mavlink.messages.named_value_float = function (name, value) {
     this.format = '>10sf';
     this.id = mavlink.MAVLINK_MSG_ID_NAMED_VALUE_FLOAT;
     this.order_map = [0, 1];
     this.crc_extra = 224;
     this.name = 'NAMED_VALUE_FLOAT';
-
     this.fieldnames = ['name', 'value'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.named_value_float.prototype = new mavlink.message;
-
-mavlink.messages.named_value_float.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.name, this.value]));
-}
-
-/* 
+mavlink.messages.named_value_float.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.name, this.value]));
+};
+/*
 Send a key-value pair as integer. The use of this message is
 discouraged for normal packets, but a quite efficient way for testing
 new messages and getting experimental debug output.
@@ -3040,28 +2347,20 @@ new messages and getting experimental debug output.
                 value                     : Signed integer value (int32_t)
 
 */
-mavlink.messages.named_value_int = function(name, value) {
-
+mavlink.messages.named_value_int = function (name, value) {
     this.format = '>10si';
     this.id = mavlink.MAVLINK_MSG_ID_NAMED_VALUE_INT;
     this.order_map = [0, 1];
     this.crc_extra = 60;
     this.name = 'NAMED_VALUE_INT';
-
     this.fieldnames = ['name', 'value'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.named_value_int.prototype = new mavlink.message;
-
-mavlink.messages.named_value_int.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.name, this.value]));
-}
-
-/* 
+mavlink.messages.named_value_int.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.name, this.value]));
+};
+/*
 Status text message. These messages are printed in yellow in the COMM
 console of QGroundControl. WARNING: They consume quite some bandwidth,
 so use only for important status and error messages. If implemented
@@ -3072,28 +2371,20 @@ limited rate (e.g. 10 Hz).
                 text                      : Status text message, without null termination character (int8_t)
 
 */
-mavlink.messages.statustext = function(severity, text) {
-
+mavlink.messages.statustext = function (severity, text) {
     this.format = '>B50s';
     this.id = mavlink.MAVLINK_MSG_ID_STATUSTEXT;
     this.order_map = [0, 1];
     this.crc_extra = 106;
     this.name = 'STATUSTEXT';
-
     this.fieldnames = ['severity', 'text'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.statustext.prototype = new mavlink.message;
-
-mavlink.messages.statustext.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.severity, this.text]));
-}
-
-/* 
+mavlink.messages.statustext.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.severity, this.text]));
+};
+/*
 Send a debug value. The index is used to discriminate between values.
 These values show up in the plot of QGroundControl as DEBUG N.
 
@@ -3101,147 +2392,127 @@ These values show up in the plot of QGroundControl as DEBUG N.
                 value                     : DEBUG value (float)
 
 */
-mavlink.messages.debug = function(ind, value) {
-
+mavlink.messages.debug = function (ind, value) {
     this.format = '>Bf';
     this.id = mavlink.MAVLINK_MSG_ID_DEBUG;
     this.order_map = [0, 1];
     this.crc_extra = 7;
     this.name = 'DEBUG';
-
     this.fieldnames = ['ind', 'value'];
-
-
     this.set(arguments);
-
-}
-        
+};
 mavlink.messages.debug.prototype = new mavlink.message;
-
-mavlink.messages.debug.prototype.pack = function(mav) {
-    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [ this.ind, this.value]));
-}
-
-
-
+mavlink.messages.debug.prototype.pack = function (mav) {
+    return mavlink.message.prototype.pack.call(this, mav, this.crc_extra, jspack.Pack(this.format, [this.ind, this.value]));
+};
 mavlink.map = {
-        150: { format: '>hhhfiiffffff', type: mavlink.messages.sensor_offsets, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], crc_extra: 143 },
-        151: { format: '>BBhhh', type: mavlink.messages.set_mag_offsets, order_map: [0, 1, 2, 3, 4], crc_extra: 29 },
-        152: { format: '>HH', type: mavlink.messages.meminfo, order_map: [0, 1], crc_extra: 208 },
-        153: { format: '>HHHHHH', type: mavlink.messages.ap_adc, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 188 },
-        154: { format: '>BBBHBBBBBBf', type: mavlink.messages.digicam_configure, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], crc_extra: 118 },
-        155: { format: '>BBBBbBBBBf', type: mavlink.messages.digicam_control, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], crc_extra: 242 },
-        156: { format: '>BBBBBB', type: mavlink.messages.mount_configure, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 19 },
-        157: { format: '>BBiiiB', type: mavlink.messages.mount_control, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 97 },
-        158: { format: '>BBiii', type: mavlink.messages.mount_status, order_map: [0, 1, 2, 3, 4], crc_extra: 233 },
-        160: { format: '>BBBBff', type: mavlink.messages.fence_point, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 18 },
-        161: { format: '>BBB', type: mavlink.messages.fence_fetch_point, order_map: [0, 1, 2], crc_extra: 68 },
-        162: { format: '>BHBI', type: mavlink.messages.fence_status, order_map: [0, 1, 2, 3], crc_extra: 136 },
-        163: { format: '>fffffff', type: mavlink.messages.ahrs, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 127 },
-        164: { format: '>fffffffff', type: mavlink.messages.simstate, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 42 },
-        165: { format: '>HB', type: mavlink.messages.hwstatus, order_map: [0, 1], crc_extra: 21 },
-        166: { format: '>BBBBBHH', type: mavlink.messages.radio, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 93 },
-        0: { format: '>BBB', type: mavlink.messages.heartbeat, order_map: [0, 1, 2], crc_extra: 72 },
-        1: { format: '>I', type: mavlink.messages.boot, order_map: [0], crc_extra: 39 },
-        2: { format: '>Q', type: mavlink.messages.system_time, order_map: [0], crc_extra: 190 },
-        3: { format: '>IBBQ', type: mavlink.messages.ping, order_map: [0, 1, 2, 3], crc_extra: 92 },
-        4: { format: '>II', type: mavlink.messages.system_time_utc, order_map: [0, 1], crc_extra: 191 },
-        5: { format: '>BBB25s', type: mavlink.messages.change_operator_control, order_map: [0, 1, 2, 3], crc_extra: 217 },
-        6: { format: '>BBB', type: mavlink.messages.change_operator_control_ack, order_map: [0, 1, 2], crc_extra: 104 },
-        7: { format: '>32s', type: mavlink.messages.auth_key, order_map: [0], crc_extra: 119 },
-        9: { format: '>BB', type: mavlink.messages.action_ack, order_map: [0, 1], crc_extra: 219 },
-        10: { format: '>BBB', type: mavlink.messages.action, order_map: [0, 1, 2], crc_extra: 60 },
-        11: { format: '>BB', type: mavlink.messages.set_mode, order_map: [0, 1], crc_extra: 186 },
-        12: { format: '>BB', type: mavlink.messages.set_nav_mode, order_map: [0, 1], crc_extra: 10 },
-        20: { format: '>BB15sh', type: mavlink.messages.param_request_read, order_map: [0, 1, 2, 3], crc_extra: 89 },
-        21: { format: '>BB', type: mavlink.messages.param_request_list, order_map: [0, 1], crc_extra: 159 },
-        22: { format: '>15sfHH', type: mavlink.messages.param_value, order_map: [0, 1, 2, 3], crc_extra: 162 },
-        23: { format: '>BB15sf', type: mavlink.messages.param_set, order_map: [0, 1, 2, 3], crc_extra: 121 },
-        25: { format: '>QBiiiffff', type: mavlink.messages.gps_raw_int, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 149 },
-        26: { format: '>Qhhhhhhhhh', type: mavlink.messages.scaled_imu, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], crc_extra: 222 },
-        27: { format: '>B20s20s20s20s20s', type: mavlink.messages.gps_status, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 110 },
-        28: { format: '>Qhhhhhhhhh', type: mavlink.messages.raw_imu, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], crc_extra: 179 },
-        29: { format: '>Qhhhh', type: mavlink.messages.raw_pressure, order_map: [0, 1, 2, 3, 4], crc_extra: 136 },
-        38: { format: '>Qffh', type: mavlink.messages.scaled_pressure, order_map: [0, 1, 2, 3], crc_extra: 229 },
-        30: { format: '>Qffffff', type: mavlink.messages.attitude, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 66 },
-        31: { format: '>Qffffff', type: mavlink.messages.local_position, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 126 },
-        33: { format: '>Qffffff', type: mavlink.messages.global_position, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 147 },
-        32: { format: '>QBfffffff', type: mavlink.messages.gps_raw, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 185 },
-        34: { format: '>BBBHHHH', type: mavlink.messages.sys_status, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 112 },
-        35: { format: '>HHHHHHHHB', type: mavlink.messages.rc_channels_raw, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 252 },
-        36: { format: '>hhhhhhhhB', type: mavlink.messages.rc_channels_scaled, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 162 },
-        37: { format: '>HHHHHHHH', type: mavlink.messages.servo_output_raw, order_map: [0, 1, 2, 3, 4, 5, 6, 7], crc_extra: 215 },
-        39: { format: '>BBHBBBBfffffff', type: mavlink.messages.waypoint, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], crc_extra: 128 },
-        40: { format: '>BBH', type: mavlink.messages.waypoint_request, order_map: [0, 1, 2], crc_extra: 9 },
-        41: { format: '>BBH', type: mavlink.messages.waypoint_set_current, order_map: [0, 1, 2], crc_extra: 106 },
-        42: { format: '>H', type: mavlink.messages.waypoint_current, order_map: [0], crc_extra: 101 },
-        43: { format: '>BB', type: mavlink.messages.waypoint_request_list, order_map: [0, 1], crc_extra: 213 },
-        44: { format: '>BBH', type: mavlink.messages.waypoint_count, order_map: [0, 1, 2], crc_extra: 4 },
-        45: { format: '>BB', type: mavlink.messages.waypoint_clear_all, order_map: [0, 1], crc_extra: 229 },
-        46: { format: '>H', type: mavlink.messages.waypoint_reached, order_map: [0], crc_extra: 21 },
-        47: { format: '>BBB', type: mavlink.messages.waypoint_ack, order_map: [0, 1, 2], crc_extra: 214 },
-        48: { format: '>BBiii', type: mavlink.messages.gps_set_global_origin, order_map: [0, 1, 2, 3, 4], crc_extra: 215 },
-        49: { format: '>iii', type: mavlink.messages.gps_local_origin_set, order_map: [0, 1, 2], crc_extra: 14 },
-        50: { format: '>BBffff', type: mavlink.messages.local_position_setpoint_set, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 206 },
-        51: { format: '>ffff', type: mavlink.messages.local_position_setpoint, order_map: [0, 1, 2, 3], crc_extra: 50 },
-        52: { format: '>BBBBBBBB', type: mavlink.messages.control_status, order_map: [0, 1, 2, 3, 4, 5, 6, 7], crc_extra: 157 },
-        53: { format: '>BBBffffff', type: mavlink.messages.safety_set_allowed_area, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 126 },
-        54: { format: '>Bffffff', type: mavlink.messages.safety_allowed_area, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 108 },
-        55: { format: '>BBffff', type: mavlink.messages.set_roll_pitch_yaw_thrust, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 213 },
-        56: { format: '>BBffff', type: mavlink.messages.set_roll_pitch_yaw_speed_thrust, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 95 },
-        57: { format: '>Qffff', type: mavlink.messages.roll_pitch_yaw_thrust_setpoint, order_map: [0, 1, 2, 3, 4], crc_extra: 5 },
-        58: { format: '>Qffff', type: mavlink.messages.roll_pitch_yaw_speed_thrust_setpoint, order_map: [0, 1, 2, 3, 4], crc_extra: 127 },
-        62: { format: '>ffhhHfff', type: mavlink.messages.nav_controller_output, order_map: [0, 1, 2, 3, 4, 5, 6, 7], crc_extra: 57 },
-        63: { format: '>ffff', type: mavlink.messages.position_target, order_map: [0, 1, 2, 3], crc_extra: 126 },
-        64: { format: '>fffffffff', type: mavlink.messages.state_correction, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 130 },
-        65: { format: '>BI', type: mavlink.messages.set_altitude, order_map: [0, 1], crc_extra: 119 },
-        66: { format: '>BBBHB', type: mavlink.messages.request_data_stream, order_map: [0, 1, 2, 3, 4], crc_extra: 193 },
-        67: { format: '>Qffffffiiihhhhhh', type: mavlink.messages.hil_state, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], crc_extra: 191 },
-        68: { format: '>QffffBB', type: mavlink.messages.hil_controls, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 236 },
-        69: { format: '>BffffBBBB', type: mavlink.messages.manual_control, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 158 },
-        70: { format: '>BBHHHHHHHH', type: mavlink.messages.rc_channels_override, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], crc_extra: 143 },
-        73: { format: '>iiihhh', type: mavlink.messages.global_position_int, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 104 },
-        74: { format: '>ffhHff', type: mavlink.messages.vfr_hud, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 123 },
-        75: { format: '>BBBBffff', type: mavlink.messages.command, order_map: [0, 1, 2, 3, 4, 5, 6, 7], crc_extra: 131 },
-        76: { format: '>ff', type: mavlink.messages.command_ack, order_map: [0, 1], crc_extra: 8 },
-        100: { format: '>QBhhBf', type: mavlink.messages.optical_flow, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 174 },
-        140: { format: '>IHB20sBff', type: mavlink.messages.object_detection_event, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 155 },
-        251: { format: '>10sQfff', type: mavlink.messages.debug_vect, order_map: [0, 1, 2, 3, 4], crc_extra: 178 },
-        252: { format: '>10sf', type: mavlink.messages.named_value_float, order_map: [0, 1], crc_extra: 224 },
-        253: { format: '>10si', type: mavlink.messages.named_value_int, order_map: [0, 1], crc_extra: 60 },
-        254: { format: '>B50s', type: mavlink.messages.statustext, order_map: [0, 1], crc_extra: 106 },
-        255: { format: '>Bf', type: mavlink.messages.debug, order_map: [0, 1], crc_extra: 7 },
-}
-
-
+    150: { format: '>hhhfiiffffff', type: mavlink.messages.sensor_offsets, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], crc_extra: 143 },
+    151: { format: '>BBhhh', type: mavlink.messages.set_mag_offsets, order_map: [0, 1, 2, 3, 4], crc_extra: 29 },
+    152: { format: '>HH', type: mavlink.messages.meminfo, order_map: [0, 1], crc_extra: 208 },
+    153: { format: '>HHHHHH', type: mavlink.messages.ap_adc, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 188 },
+    154: { format: '>BBBHBBBBBBf', type: mavlink.messages.digicam_configure, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], crc_extra: 118 },
+    155: { format: '>BBBBbBBBBf', type: mavlink.messages.digicam_control, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], crc_extra: 242 },
+    156: { format: '>BBBBBB', type: mavlink.messages.mount_configure, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 19 },
+    157: { format: '>BBiiiB', type: mavlink.messages.mount_control, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 97 },
+    158: { format: '>BBiii', type: mavlink.messages.mount_status, order_map: [0, 1, 2, 3, 4], crc_extra: 233 },
+    160: { format: '>BBBBff', type: mavlink.messages.fence_point, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 18 },
+    161: { format: '>BBB', type: mavlink.messages.fence_fetch_point, order_map: [0, 1, 2], crc_extra: 68 },
+    162: { format: '>BHBI', type: mavlink.messages.fence_status, order_map: [0, 1, 2, 3], crc_extra: 136 },
+    163: { format: '>fffffff', type: mavlink.messages.ahrs, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 127 },
+    164: { format: '>fffffffff', type: mavlink.messages.simstate, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 42 },
+    165: { format: '>HB', type: mavlink.messages.hwstatus, order_map: [0, 1], crc_extra: 21 },
+    166: { format: '>BBBBBHH', type: mavlink.messages.radio, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 93 },
+    0: { format: '>BBB', type: mavlink.messages.heartbeat, order_map: [0, 1, 2], crc_extra: 72 },
+    1: { format: '>I', type: mavlink.messages.boot, order_map: [0], crc_extra: 39 },
+    2: { format: '>Q', type: mavlink.messages.system_time, order_map: [0], crc_extra: 190 },
+    3: { format: '>IBBQ', type: mavlink.messages.ping, order_map: [0, 1, 2, 3], crc_extra: 92 },
+    4: { format: '>II', type: mavlink.messages.system_time_utc, order_map: [0, 1], crc_extra: 191 },
+    5: { format: '>BBB25s', type: mavlink.messages.change_operator_control, order_map: [0, 1, 2, 3], crc_extra: 217 },
+    6: { format: '>BBB', type: mavlink.messages.change_operator_control_ack, order_map: [0, 1, 2], crc_extra: 104 },
+    7: { format: '>32s', type: mavlink.messages.auth_key, order_map: [0], crc_extra: 119 },
+    9: { format: '>BB', type: mavlink.messages.action_ack, order_map: [0, 1], crc_extra: 219 },
+    10: { format: '>BBB', type: mavlink.messages.action, order_map: [0, 1, 2], crc_extra: 60 },
+    11: { format: '>BB', type: mavlink.messages.set_mode, order_map: [0, 1], crc_extra: 186 },
+    12: { format: '>BB', type: mavlink.messages.set_nav_mode, order_map: [0, 1], crc_extra: 10 },
+    20: { format: '>BB15sh', type: mavlink.messages.param_request_read, order_map: [0, 1, 2, 3], crc_extra: 89 },
+    21: { format: '>BB', type: mavlink.messages.param_request_list, order_map: [0, 1], crc_extra: 159 },
+    22: { format: '>15sfHH', type: mavlink.messages.param_value, order_map: [0, 1, 2, 3], crc_extra: 162 },
+    23: { format: '>BB15sf', type: mavlink.messages.param_set, order_map: [0, 1, 2, 3], crc_extra: 121 },
+    25: { format: '>QBiiiffff', type: mavlink.messages.gps_raw_int, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 149 },
+    26: { format: '>Qhhhhhhhhh', type: mavlink.messages.scaled_imu, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], crc_extra: 222 },
+    27: { format: '>B20s20s20s20s20s', type: mavlink.messages.gps_status, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 110 },
+    28: { format: '>Qhhhhhhhhh', type: mavlink.messages.raw_imu, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], crc_extra: 179 },
+    29: { format: '>Qhhhh', type: mavlink.messages.raw_pressure, order_map: [0, 1, 2, 3, 4], crc_extra: 136 },
+    38: { format: '>Qffh', type: mavlink.messages.scaled_pressure, order_map: [0, 1, 2, 3], crc_extra: 229 },
+    30: { format: '>Qffffff', type: mavlink.messages.attitude, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 66 },
+    31: { format: '>Qffffff', type: mavlink.messages.local_position, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 126 },
+    33: { format: '>Qffffff', type: mavlink.messages.global_position, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 147 },
+    32: { format: '>QBfffffff', type: mavlink.messages.gps_raw, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 185 },
+    34: { format: '>BBBHHHH', type: mavlink.messages.sys_status, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 112 },
+    35: { format: '>HHHHHHHHB', type: mavlink.messages.rc_channels_raw, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 252 },
+    36: { format: '>hhhhhhhhB', type: mavlink.messages.rc_channels_scaled, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 162 },
+    37: { format: '>HHHHHHHH', type: mavlink.messages.servo_output_raw, order_map: [0, 1, 2, 3, 4, 5, 6, 7], crc_extra: 215 },
+    39: { format: '>BBHBBBBfffffff', type: mavlink.messages.waypoint, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13], crc_extra: 128 },
+    40: { format: '>BBH', type: mavlink.messages.waypoint_request, order_map: [0, 1, 2], crc_extra: 9 },
+    41: { format: '>BBH', type: mavlink.messages.waypoint_set_current, order_map: [0, 1, 2], crc_extra: 106 },
+    42: { format: '>H', type: mavlink.messages.waypoint_current, order_map: [0], crc_extra: 101 },
+    43: { format: '>BB', type: mavlink.messages.waypoint_request_list, order_map: [0, 1], crc_extra: 213 },
+    44: { format: '>BBH', type: mavlink.messages.waypoint_count, order_map: [0, 1, 2], crc_extra: 4 },
+    45: { format: '>BB', type: mavlink.messages.waypoint_clear_all, order_map: [0, 1], crc_extra: 229 },
+    46: { format: '>H', type: mavlink.messages.waypoint_reached, order_map: [0], crc_extra: 21 },
+    47: { format: '>BBB', type: mavlink.messages.waypoint_ack, order_map: [0, 1, 2], crc_extra: 214 },
+    48: { format: '>BBiii', type: mavlink.messages.gps_set_global_origin, order_map: [0, 1, 2, 3, 4], crc_extra: 215 },
+    49: { format: '>iii', type: mavlink.messages.gps_local_origin_set, order_map: [0, 1, 2], crc_extra: 14 },
+    50: { format: '>BBffff', type: mavlink.messages.local_position_setpoint_set, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 206 },
+    51: { format: '>ffff', type: mavlink.messages.local_position_setpoint, order_map: [0, 1, 2, 3], crc_extra: 50 },
+    52: { format: '>BBBBBBBB', type: mavlink.messages.control_status, order_map: [0, 1, 2, 3, 4, 5, 6, 7], crc_extra: 157 },
+    53: { format: '>BBBffffff', type: mavlink.messages.safety_set_allowed_area, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 126 },
+    54: { format: '>Bffffff', type: mavlink.messages.safety_allowed_area, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 108 },
+    55: { format: '>BBffff', type: mavlink.messages.set_roll_pitch_yaw_thrust, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 213 },
+    56: { format: '>BBffff', type: mavlink.messages.set_roll_pitch_yaw_speed_thrust, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 95 },
+    57: { format: '>Qffff', type: mavlink.messages.roll_pitch_yaw_thrust_setpoint, order_map: [0, 1, 2, 3, 4], crc_extra: 5 },
+    58: { format: '>Qffff', type: mavlink.messages.roll_pitch_yaw_speed_thrust_setpoint, order_map: [0, 1, 2, 3, 4], crc_extra: 127 },
+    62: { format: '>ffhhHfff', type: mavlink.messages.nav_controller_output, order_map: [0, 1, 2, 3, 4, 5, 6, 7], crc_extra: 57 },
+    63: { format: '>ffff', type: mavlink.messages.position_target, order_map: [0, 1, 2, 3], crc_extra: 126 },
+    64: { format: '>fffffffff', type: mavlink.messages.state_correction, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 130 },
+    65: { format: '>BI', type: mavlink.messages.set_altitude, order_map: [0, 1], crc_extra: 119 },
+    66: { format: '>BBBHB', type: mavlink.messages.request_data_stream, order_map: [0, 1, 2, 3, 4], crc_extra: 193 },
+    67: { format: '>Qffffffiiihhhhhh', type: mavlink.messages.hil_state, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], crc_extra: 191 },
+    68: { format: '>QffffBB', type: mavlink.messages.hil_controls, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 236 },
+    69: { format: '>BffffBBBB', type: mavlink.messages.manual_control, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8], crc_extra: 158 },
+    70: { format: '>BBHHHHHHHH', type: mavlink.messages.rc_channels_override, order_map: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], crc_extra: 143 },
+    73: { format: '>iiihhh', type: mavlink.messages.global_position_int, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 104 },
+    74: { format: '>ffhHff', type: mavlink.messages.vfr_hud, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 123 },
+    75: { format: '>BBBBffff', type: mavlink.messages.command, order_map: [0, 1, 2, 3, 4, 5, 6, 7], crc_extra: 131 },
+    76: { format: '>ff', type: mavlink.messages.command_ack, order_map: [0, 1], crc_extra: 8 },
+    100: { format: '>QBhhBf', type: mavlink.messages.optical_flow, order_map: [0, 1, 2, 3, 4, 5], crc_extra: 174 },
+    140: { format: '>IHB20sBff', type: mavlink.messages.object_detection_event, order_map: [0, 1, 2, 3, 4, 5, 6], crc_extra: 155 },
+    251: { format: '>10sQfff', type: mavlink.messages.debug_vect, order_map: [0, 1, 2, 3, 4], crc_extra: 178 },
+    252: { format: '>10sf', type: mavlink.messages.named_value_float, order_map: [0, 1], crc_extra: 224 },
+    253: { format: '>10si', type: mavlink.messages.named_value_int, order_map: [0, 1], crc_extra: 60 },
+    254: { format: '>B50s', type: mavlink.messages.statustext, order_map: [0, 1], crc_extra: 106 },
+    255: { format: '>Bf', type: mavlink.messages.debug, order_map: [0, 1], crc_extra: 7 },
+};
 // Special mavlink message to capture malformed data packets for debugging
-mavlink.messages.bad_data = function(data, reason) {
+mavlink.messages.bad_data = function (data, reason) {
     this.id = mavlink.MAVLINK_MSG_ID_BAD_DATA;
     this.data = data;
     this.reason = reason;
     this.msgbuf = data;
-}
-
+};
 /* MAVLink protocol handling class */
-MAVLink = function(logger, srcSystem, srcComponent) {
-
+MAVLink = function (logger, srcSystem, srcComponent) {
     this.logger = logger;
-
     this.seq = 0;
     this.buf = new Buffer(0);
     this.bufInError = new Buffer(0);
-   
     this.srcSystem = (typeof srcSystem === 'undefined') ? 0 : srcSystem;
-    this.srcComponent =  (typeof srcComponent === 'undefined') ? 0 : srcComponent;
-
+    this.srcComponent = (typeof srcComponent === 'undefined') ? 0 : srcComponent;
     // The first packet we expect is a valid header, 6 bytes.
     this.expected_length = 6;
-
     this.have_prefix_error = false;
-
     this.protocol_marker = 254;
     this.little_endian = true;
-
     this.crc_extra = true;
     this.sort_fields = true;
     this.total_packets_sent = 0;
@@ -3250,120 +2521,90 @@ MAVLink = function(logger, srcSystem, srcComponent) {
     this.total_bytes_received = 0;
     this.total_receive_errors = 0;
     this.startup_time = Date.now();
-    
-}
-
+};
 // Implements EventEmitter
 util.inherits(MAVLink, events.EventEmitter);
-
 // If the logger exists, this function will add a message to it.
 // Assumes the logger is a winston object.
-MAVLink.prototype.log = function(message) {
-    if(this.logger) {
+MAVLink.prototype.log = function (message) {
+    if (this.logger) {
         this.logger.info(message);
     }
-}
-
-MAVLink.prototype.log = function(level, message) {
-    if(this.logger) {
+};
+MAVLink.prototype.log = function (level, message) {
+    if (this.logger) {
         this.logger.log(level, message);
     }
-}
-
-MAVLink.prototype.send = function(mavmsg) {
+};
+MAVLink.prototype.send = function (mavmsg) {
     buf = mavmsg.pack(this);
     this.file.write(buf);
     this.seq = (this.seq + 1) % 256;
-    this.total_packets_sent +=1;
+    this.total_packets_sent += 1;
     this.total_bytes_sent += buf.length;
-}
-
+};
 // return number of bytes needed for next parsing stage
-MAVLink.prototype.bytes_needed = function() {
+MAVLink.prototype.bytes_needed = function () {
     ret = this.expected_length - this.buf.length;
-    return ( ret <= 0 ) ? 1 : ret;
-}
-
+    return (ret <= 0) ? 1 : ret;
+};
 // add data to the local buffer
-MAVLink.prototype.pushBuffer = function(data) {
-    if(data) {
+MAVLink.prototype.pushBuffer = function (data) {
+    if (data) {
         this.buf = Buffer.concat([this.buf, data]);
         this.total_bytes_received += data.length;
     }
-}
-
+};
 // Decode prefix.  Elides the prefix.
-MAVLink.prototype.parsePrefix = function() {
-
+MAVLink.prototype.parsePrefix = function () {
     // Test for a message prefix.
-    if( this.buf.length >= 1 && this.buf[0] != 254 ) {
-
+    if (this.buf.length >= 1 && this.buf[0] != 254) {
         // Strip the offending initial byte and throw an error.
         var badPrefix = this.buf[0];
-        this.bufInError = this.buf.slice(0,1);
+        this.bufInError = this.buf.slice(0, 1);
         this.buf = this.buf.slice(1);
         this.expected_length = 6;
-
         // TODO: enable subsequent prefix error suppression if robust_parsing is implemented
         //if(!this.have_prefix_error) {
         //    this.have_prefix_error = true;
-            throw new Error("Bad prefix ("+badPrefix+")");
-        //}
-
+        throw new Error("Bad prefix (" + badPrefix + ")");
     }
     //else if( this.buf.length >= 1 && this.buf[0] == 254 ) {
     //    this.have_prefix_error = false;
     //}
-
-}
-
+};
 // Determine the length.  Leaves buffer untouched.
-MAVLink.prototype.parseLength = function() {
-    
-    if( this.buf.length >= 2 ) {
+MAVLink.prototype.parseLength = function () {
+    if (this.buf.length >= 2) {
         var unpacked = jspack.Unpack('BB', this.buf.slice(0, 2));
         this.expected_length = unpacked[1] + 8; // length of message + header + CRC
     }
-
-}
-
+};
 // input some data bytes, possibly returning a new message
-MAVLink.prototype.parseChar = function(c) {
-
+MAVLink.prototype.parseChar = function (c) {
     var m = null;
-
     try {
-
         this.pushBuffer(c);
         this.parsePrefix();
         this.parseLength();
         m = this.parsePayload();
-
-    } catch(e) {
-
+    }
+    catch (e) {
         this.log('error', e.message);
         this.total_receive_errors += 1;
         m = new mavlink.messages.bad_data(this.bufInError, e.message);
         this.bufInError = new Buffer(0);
-        
     }
-
-    if(null != m) {
+    if (null != m) {
         this.emit(m.name, m);
         this.emit('message', m);
     }
-
     return m;
-
-}
-
-MAVLink.prototype.parsePayload = function() {
-
+};
+MAVLink.prototype.parsePayload = function () {
     var m = null;
-
     // If we have enough bytes to try and read it, read it.
-    if( this.expected_length >= 8 && this.buf.length >= this.expected_length ) {
-
+    if (this.expected_length >= 8 && this.buf.length >= this.expected_length) {
         // Slice off the expected packet length, reset expectation to be to find a header.
         var mbuf = this.buf.slice(0, this.expected_length);
         // TODO: slicing off the buffer should depend on the error produced by the decode() function
@@ -3371,55 +2612,43 @@ MAVLink.prototype.parsePayload = function() {
         // - if the message is not well formed (correct prefix by accident), cut-off 1 char only
         this.buf = this.buf.slice(this.expected_length);
         this.expected_length = 6;
-
         // w.info("Attempting to parse packet, message candidate buffer is ["+mbuf.toByteArray()+"]");
-
         try {
             m = this.decode(mbuf);
             this.total_packets_received += 1;
         }
-        catch(e) {
+        catch (e) {
             // Set buffer in question and re-throw to generic error handling
             this.bufInError = mbuf;
             throw e;
         }
     }
-
     return m;
-
-}
-
+};
 // input some data bytes, possibly returning an array of new messages
-MAVLink.prototype.parseBuffer = function(s) {
-    
+MAVLink.prototype.parseBuffer = function (s) {
     // Get a message, if one is available in the stream.
     var m = this.parseChar(s);
-
     // No messages available, bail.
-    if ( null === m ) {
+    if (null === m) {
         return null;
     }
-    
     // While more valid messages can be read from the existing buffer, add
     // them to the array of new messages and return them.
     var ret = [m];
-    while(true) {
+    while (true) {
         m = this.parseChar();
-        if ( null === m ) {
+        if (null === m) {
             // No more messages left.
             return ret;
         }
         ret.push(m);
     }
     return ret;
-
-}
-
+};
 /* decode a buffer as a MAVLink message */
-MAVLink.prototype.decode = function(msgbuf) {
-
+MAVLink.prototype.decode = function (msgbuf) {
     var magic, mlen, seq, srcSystem, srcComponent, unpacked, msgId;
-
     // decode the header
     try {
         unpacked = jspack.Unpack('cBBBBB', msgbuf.slice(0, 6));
@@ -3430,63 +2659,53 @@ MAVLink.prototype.decode = function(msgbuf) {
         srcComponent = unpacked[4];
         msgId = unpacked[5];
     }
-    catch(e) {
+    catch (e) {
         throw new Error('Unable to unpack MAVLink header: ' + e.message);
     }
-
     if (magic.charCodeAt(0) != 254) {
-        throw new Error("Invalid MAVLink prefix ("+magic.charCodeAt(0)+")");
+        throw new Error("Invalid MAVLink prefix (" + magic.charCodeAt(0) + ")");
     }
-
-    if( mlen != msgbuf.length - 8 ) {
+    if (mlen != msgbuf.length - 8) {
         throw new Error("Invalid MAVLink message length.  Got " + (msgbuf.length - 8) + " expected " + mlen + ", msgId=" + msgId);
     }
-
-    if( false === _.has(mavlink.map, msgId) ) {
+    if (false === _.has(mavlink.map, msgId)) {
         throw new Error("Unknown MAVLink message ID (" + msgId + ")");
     }
-
     // decode the payload
     // refs: (fmt, type, order_map, crc_extra) = mavlink.map[msgId]
     var decoder = mavlink.map[msgId];
-
     // decode the checksum
     try {
         var receivedChecksum = jspack.Unpack('<H', msgbuf.slice(msgbuf.length - 2));
-    } catch (e) {
+    }
+    catch (e) {
         throw new Error("Unable to unpack MAVLink CRC: " + e.message);
     }
-
     var messageChecksum = mavlink.x25Crc(msgbuf.slice(1, msgbuf.length - 2));
-
     // Assuming using crc_extra = True.  See the message.prototype.pack() function.
     messageChecksum = mavlink.x25Crc([decoder.crc_extra], messageChecksum);
-    
-    if ( receivedChecksum != messageChecksum ) {
-        throw new Error('invalid MAVLink CRC in msgID ' +msgId+ ', got 0x' + receivedChecksum + ' checksum, calculated payload checkum as 0x'+messageChecksum );
+    if (receivedChecksum != messageChecksum) {
+        throw new Error('invalid MAVLink CRC in msgID ' + msgId + ', got 0x' + receivedChecksum + ' checksum, calculated payload checkum as 0x' + messageChecksum);
     }
-
     // Decode the payload and reorder the fields to match the order map.
     try {
         var t = jspack.Unpack(decoder.format, msgbuf.slice(6, msgbuf.length));
     }
     catch (e) {
-        throw new Error('Unable to unpack MAVLink payload type='+decoder.type+' format='+decoder.format+' payloadLength='+ msgbuf.slice(6, -2).length +': '+ e.message);
+        throw new Error('Unable to unpack MAVLink payload type=' + decoder.type + ' format=' + decoder.format + ' payloadLength=' + msgbuf.slice(6, -2).length + ': ' + e.message);
     }
-
     // Reorder the fields to match the order map
     var args = [];
-    _.each(t, function(e, i, l) {
-        args[i] = t[decoder.order_map[i]]
+    _.each(t, function (e, i, l) {
+        args[i] = t[decoder.order_map[i]];
     });
-
     // construct the message object
     try {
         var m = new decoder.type(args);
         m.set.call(m, args);
     }
     catch (e) {
-        throw new Error('Unable to instantiate MAVLink message of type '+decoder.type+' : ' + e.message);
+        throw new Error('Unable to instantiate MAVLink message of type ' + decoder.type + ' : ' + e.message);
     }
     m.msgbuf = msgbuf;
     m.payload = msgbuf.slice(6);
@@ -3494,9 +2713,7 @@ MAVLink.prototype.decode = function(msgbuf) {
     m.header = new mavlink.header(msgId, mlen, seq, srcSystem, srcComponent);
     this.log(m);
     return m;
-}
-
-
+};
 // Expose this code as a module
 module.exports = mavlink;
-
+//# sourceMappingURL=mavlink.js.map

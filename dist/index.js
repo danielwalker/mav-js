@@ -11,7 +11,7 @@ let connection = net.createConnection(5760, '127.0.0.1', function() {
     //setGuided();
     //arm();
     //takeOff();
-    flyto();
+    //flyto();
 });
 
 connection.on('data', function(data) {    
@@ -23,8 +23,14 @@ connection.on('data', function(data) {
     });
 });
 
+
+
 mavlinkParser.on('HEARTBEAT', function(message) {    
-    console.log('RX HEARTBEAT');
+    if(message.system_status == mavlink.MAV_STATE_STANDBY) {
+        console.log("STAND_BY");
+    }
+
+    console.log('RX HEARTBEAT', message.system_status);
 });
 
 mavlinkParser.on('SYS_STATUS', function(message) {    
