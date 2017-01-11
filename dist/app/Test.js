@@ -1,5 +1,5 @@
 "use strict";
-const Mav_1 = require("./Mav");
+const Mav_1 = require("./mav/Mav");
 const Log_1 = require("./Log");
 let mav = new Mav_1.Mav(5760, '127.0.0.1');
 mav.connect();

@@ -1,4 +1,4 @@
-import { Mav, Status } from "./Mav"
+import { Mav, Status } from "./mav/Mav"
 import { log } from "./Log"
 
 let mav: Mav = new Mav(5760, '127.0.0.1');
